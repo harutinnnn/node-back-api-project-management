@@ -1,147 +1,33 @@
-import express, { Request, Response } from "express";
+import express, {Request, Response} from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { z, ZodError } from "zod";
-import { db } from "./db";
-import { users } from "./db/schema";
+import {z, ZodError} from "zod";
+import {db} from "./db";
+import {users} from "./db/schema";
 import jwt from "jsonwebtoken";
-import { eq } from "drizzle-orm";
+import {eq} from "drizzle-orm";
 import passport from "./config/passport";
-import { authenticateJWT } from "./middlewares/auth";
+import {authenticateJWT} from "./middlewares/auth";
 import bcrypt from "bcrypt";
+import {createApp} from "./routes/app";
+import {AppContext} from "./types/app.context.type";
 
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT || 4000;
+const context: AppContext = {}
+const app = createApp(context)
 
+const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
+
 app.use(passport.initialize());
 
-// Sample schema for validation
-const UserSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-});
 
 app.get("/", (req: Request, res: Response) => {
     res.send("API is running!");
 });
 
-app.get("/users", authenticateJWT, async (req: Request, res: Response) => {
-    try {
-        const allUsers = await db.select().from(users);
-        res.json(allUsers);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch users" });
-    }
-});
-
-app.post("/register", async (req: Request, res: Response): Promise<any> => {
-    try {
-        const validatedData = UserSchema.parse(req.body);
-
-        // Check if user already exists
-        const [existingUser] = await db.select().from(users).where(eq(users.email, validatedData.email));
-        if (existingUser) {
-            return res.status(400).json({ error: "User with this email already exists" });
-        }
-
-        const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-
-        await db.insert(users).values({ ...validatedData, password: hashedPassword });
-
-        // Fetch newly created user
-        const [newUser] = await db.select().from(users).where(eq(users.email, validatedData.email));
-
-        const payload = { id: newUser.id, email: newUser.email };
-        const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", { expiresIn: "15m" });
-        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", { expiresIn: "7d" });
-
-        // Save refresh token to db
-        await db.update(users).set({ refreshToken }).where(eq(users.id, newUser.id));
-
-        res.status(201).json({ token, refreshToken, user: { id: newUser.id, name: newUser.name, email: newUser.email } });
-    } catch (error) {
-        if (error instanceof ZodError) {
-            res.status(400).json({ error: (error as any).errors });
-        } else {
-            res.status(500).json({ error: "Failed to register user" });
-        }
-    }
-});
-
-app.post("/login", async (req: Request, res: Response): Promise<any> => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: "Email and password are required" });
-    }
-
-    try {
-        const [user] = await db.select().from(users).where(eq(users.email, email));
-        if (!user) {
-            return res.status(401).json({ error: "Invalid credentials" });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: "Invalid credentials" });
-        }
-
-        const payload = { id: user.id, email: user.email };
-        const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", { expiresIn: "15m" });
-        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", { expiresIn: "7d" });
-
-        // Save refresh token to db
-        await db.update(users).set({ refreshToken }).where(eq(users.id, user.id));
-
-        res.json({ token, refreshToken, user: { id: user.id, name: user.name, email: user.email } });
-    } catch (error) {
-        res.status(500).json({ error: "Login failed" });
-    }
-});
-
-app.post("/refresh", async (req: Request, res: Response): Promise<any> => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
-        return res.status(401).json({ error: "Refresh token is required" });
-    }
-
-    try {
-        // Verify refresh token signature
-        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || "default_refresh_secret") as { id: number, email: string };
-
-        // Verify it matches user in database
-        const [user] = await db.select().from(users).where(eq(users.id, decoded.id));
-
-        if (!user || user.refreshToken !== refreshToken) {
-            return res.status(403).json({ error: "Invalid refresh token" });
-        }
-
-        // Generate new short-lived access token
-        const payload = { id: user.id, email: user.email };
-        const newToken = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", { expiresIn: "15m" });
-
-        res.json({ token: newToken });
-    } catch (error) {
-        return res.status(403).json({ error: "Invalid or expired refresh token" });
-    }
-});
-
-app.post("/logout", authenticateJWT, async (req: Request, res: Response): Promise<any> => {
-    try {
-        const userId = (req.user as any).id;
-
-        // Remove the refresh token from the database
-        await db.update(users).set({ refreshToken: null }).where(eq(users.id, userId));
-
-        res.json({ message: "Logged out successfully" });
-    } catch (error) {
-        res.status(500).json({ error: "Logout failed" });
-    }
-});
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);

@@ -1,0 +1,4 @@
+CREATE USER 'management'@'localhost' IDENTIFIED BY '123456';
+
+GRANT ALL PRIVILEGES ON management.* TO 'management'@'localhost';
+GRANT ALL PRIVILEGES ON *.* TO 'username'@'localhost';
