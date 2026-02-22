@@ -4,6 +4,7 @@ import passport from "../config/passport";
 import {AppContext} from "../types/app.context.type";
 import {authRouter} from "./auth.route";
 import {userRouter} from "./user.route";
+import {projectRouter} from "./project.route";
 
 export const createApp = (context: AppContext) => {
 
@@ -17,6 +18,7 @@ export const createApp = (context: AppContext) => {
 
     app.use('/auth', authRouter(context));
     app.use('/users', userRouter(context));
+    app.use('/project', projectRouter(context));
 
 
     return app;

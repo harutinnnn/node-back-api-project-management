@@ -1,5 +1,4 @@
 import {Request, Response} from "express";
-import {db} from "../db";
 import {users} from "../db/schema";
 import {eq} from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -19,24 +18,24 @@ export class AuthController {
             const validatedData = UserSchema.parse(req.body);
 
             // Check if user already exists
-            const [existingUser] = await db.select().from(users).where(eq(users.email, validatedData.email));
+            const [existingUser] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
             if (existingUser) {
                 return res.status(400).json({error: "User with this email already exists"});
             }
 
             const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-            await db.insert(users).values({...validatedData, password: hashedPassword});
+            await this.context.db.insert(users).values({...validatedData, password: hashedPassword});
 
             // Fetch newly created user
-            const [newUser] = await db.select().from(users).where(eq(users.email, validatedData.email));
+            const [newUser] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
 
             const payload = {id: newUser.id, email: newUser.email};
             const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", {expiresIn: "15m"});
             const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", {expiresIn: "7d"});
 
             // Save refresh token to db
-            await db.update(users).set({refreshToken}).where(eq(users.id, newUser.id));
+            await this.context.db.update(users).set({refreshToken}).where(eq(users.id, newUser.id));
 
             res.status(201).json({
                 token,
@@ -63,7 +62,7 @@ export class AuthController {
         }
 
         try {
-            const [user] = await db.select().from(users).where(eq(users.email, email));
+            const [user] = await this.context.db.select().from(users).where(eq(users.email, email));
             if (!user) {
                 return res.status(401).json({error: "Invalid credentials"});
             }
@@ -78,7 +77,7 @@ export class AuthController {
             const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", {expiresIn: "7d"});
 
             // Save refresh token to db
-            await db.update(users).set({refreshToken}).where(eq(users.id, user.id));
+            await this.context.db.update(users).set({refreshToken}).where(eq(users.id, user.id));
 
             res.json({token, refreshToken, user: {id: user.id, name: user.name, email: user.email}});
         } catch (error) {
@@ -101,7 +100,7 @@ export class AuthController {
             };
 
             // Verify it matches user in database
-            const [user] = await db.select().from(users).where(eq(users.id, decoded.id));
+            const [user] = await this.context.db.select().from(users).where(eq(users.id, decoded.id));
 
             if (!user || user.refreshToken !== refreshToken) {
                 return res.status(403).json({error: "Invalid refresh token"});
@@ -124,7 +123,7 @@ export class AuthController {
             const userId = (req.user as any).id;
 
             // Remove the refresh token from the database
-            await db.update(users).set({refreshToken: null}).where(eq(users.id, userId));
+            await this.context.db.update(users).set({refreshToken: null}).where(eq(users.id, userId));
 
             res.json({message: "Logged out successfully"});
         } catch (error) {
