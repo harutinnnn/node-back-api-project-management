@@ -5,6 +5,7 @@ import {AppContext} from "../types/app.context.type";
 import {authRouter} from "./auth.route";
 import {userRouter} from "./user.route";
 import {projectRouter} from "./project.route";
+import {taskstRouter} from "./tasks.route";
 
 export const createApp = (context: AppContext) => {
 
@@ -19,6 +20,7 @@ export const createApp = (context: AppContext) => {
     app.use('/auth', authRouter(context));
     app.use('/users', userRouter(context));
     app.use('/project', projectRouter(context));
+    app.use('/tasks', taskstRouter(context));
 
 
     return app;
