@@ -6,3 +6,6 @@ export const ProjectSchema = z.object({
     description: z.string(),
     members: z.array(z.number()).optional(),
 });
+export const DeleteProjectSchema = z.object({
+    id: z.int(),
+});

@@ -1,4 +1,4 @@
-import {mysqlTable, serial, int, varchar, timestamp, text} from "drizzle-orm/mysql-core";
+import {mysqlTable, serial, int, varchar, timestamp, text, foreignKey} from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
     id: int('id').autoincrement().primaryKey(),
@@ -21,7 +21,16 @@ export const projectMembers = mysqlTable("projectMembers", {
     id: int('id').autoincrement().primaryKey(),
     projectId: int('projectId').notNull().references(() => projects.id),
     userId: int('userId').notNull().references(() => users.id),
-})
+}, (table) => ({
+    projectFk: foreignKey({
+        columns: [table.projectId],
+        foreignColumns: [projects.id],
+    }).onDelete("cascade"),
+    userFk: foreignKey({
+        columns: [table.userId],
+        foreignColumns: [users.id],
+    }).onDelete("cascade")
+}))
 
 
 
