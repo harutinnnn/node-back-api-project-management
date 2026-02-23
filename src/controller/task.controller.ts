@@ -39,31 +39,31 @@ export class TaskController {
 
         try {
 
-            const result = await this.context.db.insert(projects).values({
-                title: validatedData.title,
-                description: validatedData.description,
-            });
-
-            const lid: number = result[0].insertId;
-
-
-            this.context.db.delete(projectMembers).where(eq(projectMembers.projectId, lid))
-
-            if (lid && validatedData.members?.length) {
-
-                validatedData.members.forEach(async (member) => {
-
-                    const projectMember = await this.context.db.insert(projectMembers).values({
-                        projectId: lid,
-                        userId: member,
-                    });
-
-                    // console.log(projectMember);
-
-                })
-
-
-            }
+            // const result = await this.context.db.insert(projects).values({
+            //     title: validatedData.title,
+            //     description: validatedData.description,
+            // });
+            //
+            // const lid: number = result[0].insertId;
+            //
+            //
+            // this.context.db.delete(projectMembers).where(eq(projectMembers.projectId, lid))
+            //
+            // if (lid && validatedData.members?.length) {
+            //
+            //     validatedData.members.forEach(async (member) => {
+            //
+            //         const projectMember = await this.context.db.insert(projectMembers).values({
+            //             projectId: lid,
+            //             userId: member,
+            //         });
+            //
+            //         // console.log(projectMember);
+            //
+            //     })
+            //
+            //
+            // }
 
 
             res.json({});
