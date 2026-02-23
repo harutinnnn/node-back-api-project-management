@@ -38,7 +38,7 @@ export const tasks = mysqlTable("tasks", {
     title: varchar("title", {length: 255}).notNull(),
     projectId: int().notNull(),
     status: mysqlEnum('status', ['pending', 'doing', 'for_check', 'finished']).notNull().default('pending'),
-    priority: mysqlEnum('priority', ['urgent', 'high', 'middle', 'low']).notNull().default('middle'),
+    priority: mysqlEnum('priority', ['urgent', 'high', 'medium', 'low']).notNull().default('medium'),
     description: text("description").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
