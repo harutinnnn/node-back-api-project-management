@@ -30,11 +30,15 @@ export class TaskController {
 
     create = async (req: Request, res: Response) => {
 
-        const validatedData = TaskSchema.parse(req.body);
+
+        console.log(req.files);
+        console.log(req.body);
+
+        // const validatedData = TaskSchema.parse(req.body);
 
         //todo handle files
 
-        console.log(validatedData);
+        // console.log(validatedData);
 
 
         try {
