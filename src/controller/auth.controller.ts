@@ -47,8 +47,6 @@ export class AuthController {
 
                 const [newUser] = await trx.select().from(users).where(eq(users.email, validatedData.email));
 
-                console.log('newUser', newUser)
-
                 const payload = {id: newUser.id, email: newUser.email};
                 const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", {expiresIn: "15m"});
                 const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", {expiresIn: "7d"});

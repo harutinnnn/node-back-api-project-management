@@ -1,0 +1,86 @@
+import {NextFunction, Request, Response} from "express";
+import {db} from "../db";
+import {projectMembers, projects, users} from "../db/schema";
+import {eq} from "drizzle-orm";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import {ZodError} from "zod";
+import {UserSchema} from "../schemas/user.schema";
+import {AppContext} from "../types/app.context.type";
+import {DeleteProjectSchema, ProjectSchema} from "../schemas/project.schema";
+import {TaskSchema} from "../schemas/task.schema";
+import {MemberSchema} from "../schemas/members.schema";
+import {UserRoles} from "../enums/UserRoles";
+
+export class MembersController {
+
+
+    constructor(private context: AppContext) {
+    }
+
+
+    index = async (req: Request, res: Response, next: NextFunction) => {
+
+        try {
+            const members = await this.context.db.select().from(users).where(eq(users.companyId, req.user?.companyId));
+
+            res.json(members);
+        } catch (error) {
+            res.status(500).json({error: "Failed to fetch users"});
+        }
+
+    }
+
+    create = async (req: Request, res: Response) => {
+
+
+        const validatedData = MemberSchema.parse(req.body);
+
+
+        try {
+
+            const hashedPassword = await bcrypt.hash(Date.now().toString(), 10);
+
+            const result = await this.context.db.insert(users).values({
+                name: validatedData.name,
+                email: validatedData.email,
+                companyId: req.user?.companyId,
+                role: UserRoles.USER,
+                password: hashedPassword
+
+            }).$returningId();
+
+            res.json({
+                id: result[0].id,
+            });
+
+        } catch (error) {
+            console.log(error)
+            if (error instanceof Error) {
+                console.error('Error: ' + error.message);
+            }
+            res.status(500).json({error: "Failed to create member"});
+        }
+    }
+
+
+    delete = async (req: Request, res: Response) => {
+
+        const validatedData = DeleteProjectSchema.parse(req.body);
+
+        try {
+            await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))
+
+            console.log('validatedData.id', validatedData.id)
+            res.json({});
+
+        } catch (error) {
+
+            if (error instanceof Error) {
+                console.error('Error: ' + error.message);
+            }
+            res.status(500).json({error: "Failed to create project"});
+        }
+    }
+
+}

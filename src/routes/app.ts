@@ -6,6 +6,7 @@ import {authRouter} from "./auth.route";
 import {userRouter} from "./user.route";
 import {projectRouter} from "./project.route";
 import {taskstRouter} from "./tasks.route";
+import {membersRouter} from "./members.route";
 
 export const createApp = (context: AppContext) => {
 
@@ -21,6 +22,7 @@ export const createApp = (context: AppContext) => {
     app.use('/users', userRouter(context));
     app.use('/project', projectRouter(context));
     app.use('/tasks', taskstRouter(context));
+    app.use('/member', membersRouter(context));
 
 
     return app;

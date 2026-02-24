@@ -1,4 +1,5 @@
 import {mysqlTable, serial, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
+import {UserRoles} from "../enums/UserRoles";
 
 export const company = mysqlTable("company", {
     id: int('id').autoincrement().primaryKey(),
@@ -16,6 +17,7 @@ export const users = mysqlTable("users", {
     email: varchar("email", {length: 255}).notNull().unique(),
     password: varchar("password", {length: 255}).notNull(),
     refreshToken: varchar("refresh_token", {length: 255}),
+    role: mysqlEnum('role', [UserRoles.ADMIN, UserRoles.USER]).notNull().default(UserRoles.USER),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     projectFk: foreignKey({
