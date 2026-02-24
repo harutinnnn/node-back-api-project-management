@@ -54,6 +54,16 @@ export class AuthController {
     }
 
 
+    authMe = async (req: Request, res: Response) => {
+
+        try {
+
+            res.json(req.user);
+
+        } catch (err) {
+            res.status(400).json({message: "Invalid token"});
+        }
+    }
     login = async (req: Request, res: Response) => {
 
         const {email, password} = req.body;

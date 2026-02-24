@@ -4,6 +4,7 @@ import {loginSchema} from "../schemas/login.schema";
 import {UserSchema} from "../schemas/user.schema";
 import {validate} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
+import {authenticateJWT} from "../middlewares/auth";
 
 export const authRouter = (context: AppContext) => {
 
@@ -16,6 +17,12 @@ export const authRouter = (context: AppContext) => {
         "/login",
         validate(loginSchema),
         authController.login
+    );
+
+    router.get(
+        "/me",
+        authenticateJWT,
+        authController.authMe
     );
 
     router.post(
