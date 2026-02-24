@@ -1,21 +1,42 @@
 import {mysqlTable, serial, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
 
+export const company = mysqlTable("company", {
+    id: int('id').autoincrement().primaryKey(),
+    name: varchar("name", {length: 255}).notNull(),
+    address: varchar("address", {length: 255}),
+    description: text("description"),
+    logo: varchar("logo", {length: 255}),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const users = mysqlTable("users", {
     id: int('id').autoincrement().primaryKey(),
+    companyId: int('companyId').references(() => company.id),
     name: varchar("name", {length: 255}).notNull(),
     email: varchar("email", {length: 255}).notNull().unique(),
     password: varchar("password", {length: 255}).notNull(),
     refreshToken: varchar("refresh_token", {length: 255}),
     createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+    projectFk: foreignKey({
+        columns: [table.companyId],
+        foreignColumns: [company.id],
+    }).onDelete("cascade"),
+}));
 
 
 export const projects = mysqlTable("projects", {
     id: int('id').autoincrement().primaryKey(),
+    companyId: int('id').references(() => company.id),
     title: varchar("title", {length: 255}).notNull(),
     description: text("description").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+    projectFk: foreignKey({
+        columns: [table.companyId],
+        foreignColumns: [company.id],
+    }).onDelete("cascade"),
+}));
 
 export const projectMembers = mysqlTable("projectMembers", {
     id: int('id').autoincrement().primaryKey(),

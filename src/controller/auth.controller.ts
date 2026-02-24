@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {users} from "../db/schema";
+import {company, users} from "../db/schema";
 import {eq} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -23,25 +23,54 @@ export class AuthController {
                 return res.status(400).json({error: "User with this email already exists"});
             }
 
-            const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+            const [existingCompany] = await this.context.db.select().from(company).where(eq(company.name, validatedData.companyName));
+            if (existingCompany) {
+                return res.status(400).json({error: "Company with this name already exists"});
+            }
 
-            await this.context.db.insert(users).values({...validatedData, password: hashedPassword});
+            this.context.db.transaction(async (trx: any) => {
+
+                const result = await trx.insert(company).values({
+                    name: validatedData.companyName,
+                    address: validatedData.address,
+                    description: validatedData.description
+                }).$returningId();
+
+                const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+
+                await trx.insert(users).values({
+                    companyId: result[0].id,
+                    name: validatedData.name,
+                    email: validatedData.email,
+                    password: hashedPassword
+                });
+
+                const [newUser] = await trx.select().from(users).where(eq(users.email, validatedData.email));
+
+                console.log('newUser', newUser)
+
+                const payload = {id: newUser.id, email: newUser.email};
+                const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", {expiresIn: "15m"});
+                const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", {expiresIn: "7d"});
+
+                // Save refresh token to db
+                await trx.update(users).set({refreshToken}).where(eq(users.id, newUser.id));
+
+                res.status(201).json({
+                    token,
+                    refreshToken,
+                    user: {id: newUser.id, name: newUser.name, email: newUser.email}
+                });
+
+            }).catch((err: any) => {
+                console.log(err);
+                res.status(500).json({error: "Failed to register user"});
+
+            })
 
             // Fetch newly created user
-            const [newUser] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
 
-            const payload = {id: newUser.id, email: newUser.email};
-            const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", {expiresIn: "15m"});
-            const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", {expiresIn: "7d"});
 
-            // Save refresh token to db
-            await this.context.db.update(users).set({refreshToken}).where(eq(users.id, newUser.id));
-
-            res.status(201).json({
-                token,
-                refreshToken,
-                user: {id: newUser.id, name: newUser.name, email: newUser.email}
-            });
         } catch (error) {
             console.log(error);
             if (error instanceof ZodError) {
