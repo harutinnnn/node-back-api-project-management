@@ -103,12 +103,12 @@ export class AuthController {
         try {
             const [user] = await this.context.db.select().from(users).where(eq(users.email, email));
             if (!user) {
-                return res.status(401).json({error: "Invalid credentials"});
+                return res.status(201).json({error: "Invalid credentials"});
             }
 
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                return res.status(401).json({error: "Invalid credentials"});
+                return res.status(201).json({error: "Invalid credentials"});
             }
 
             const payload = {id: user.id, email: user.email};
