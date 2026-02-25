@@ -8,6 +8,7 @@ import {projectRouter} from "./project.route";
 import {taskstRouter} from "./tasks.route";
 import {membersRouter} from "./members.route";
 import {skillsRouter} from "./skills.route";
+import {professionRouter} from "./profession.route";
 
 export const createApp = (context: AppContext) => {
 
@@ -25,6 +26,7 @@ export const createApp = (context: AppContext) => {
     app.use('/tasks', taskstRouter(context));
     app.use('/member', membersRouter(context));
     app.use('/skills', skillsRouter(context));
+    app.use('/profession', professionRouter(context));
 
 
     return app;

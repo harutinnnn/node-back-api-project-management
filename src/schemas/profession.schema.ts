@@ -1,6 +1,6 @@
 import {z} from "zod";
 
-export const SkillsSchema = z.object({
+export const ProfessionSchema = z.object({
     id: z.int().optional(),
     name: z.string(),
 });

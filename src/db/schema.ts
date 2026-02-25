@@ -148,7 +148,11 @@ export const professions = mysqlTable("professions", {
     projectFk: foreignKey({
         columns: [table.companyId],
         foreignColumns: [company.id],
-    }).onDelete("cascade")
+    }).onDelete("cascade"),
+    uniqueCompanyProfession: unique("professions_company_name_unique").on(
+        table.name,
+        table.companyId
+    ),
 }));
 
 
