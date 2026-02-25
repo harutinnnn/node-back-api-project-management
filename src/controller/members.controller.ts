@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {db} from "../db";
 import {projectMembers, projects, users} from "../db/schema";
-import {eq} from "drizzle-orm";
+import {and, eq} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {ZodError} from "zod";
@@ -44,11 +44,10 @@ export class MembersController {
 
         const {id} = IdParamSchema.parse(req.params);
 
-
         try {
             if (req.user?.companyId) {
 
-                const [member] = await this.context.db.select().from(users).where(eq(users.id, id));
+                const [member] = await this.context.db.select().from(users).where(and(eq(users.id, id), eq(users.companyId, req.user.companyId)));
                 delete member.password;
                 return res.json(member);
 
@@ -115,10 +114,15 @@ export class MembersController {
         const validatedData = IdParamSchema.parse(req.body);
 
         try {
-            await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))
 
-            console.log('validatedData.id', validatedData.id)
-            res.json({});
+            if (req.user?.companyId) {
+
+                await this.context.db.delete(users).where(and(eq(users.id, validatedData.id), eq(users.companyId, req.user?.companyId)))
+
+                res.json({});
+            } else {
+                res.status(500).json({error: "Failed to create project"});
+            }
 
         } catch (error) {
 

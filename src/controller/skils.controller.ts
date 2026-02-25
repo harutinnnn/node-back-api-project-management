@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {skills, users} from "../db/schema";
-import {eq} from "drizzle-orm";
+import {and, eq, ne, not} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
 import {MemberSchema} from "../schemas/members.schema";
 import {IdParamSchema} from "../schemas/IdParamSchema";
@@ -39,7 +39,7 @@ export class SkillsController {
         try {
             if (req.user?.companyId) {
 
-                const [skill] = await this.context.db.select().from(skills).where(eq(users.id, id), eq(skills.companyId, req.user.companyId));
+                const [skill] = await this.context.db.select().from(skills).where(and(eq(skills.id, id), eq(skills.companyId, req.user.companyId)));
                 return res.json(skill);
 
             } else {
@@ -67,14 +67,49 @@ export class SkillsController {
             if (req.user?.companyId) {
 
 
-                const result = await this.context.db.insert(skills).values({
-                    name: validatedData.name,
-                    companyId: req.user?.companyId,
-                }).$returningId();
+                if (validatedData.id) {
 
-                return res.json({
-                    id: result[0].id,
-                });
+                    const name = validatedData.name;
+
+                    const [skill] = await this.context.db.select().from(skills).where(and(eq(skills.companyId, req.user.companyId), eq(skills.name, validatedData.name), ne(skills.id, validatedData.id)));
+
+                    if (!skill) {
+
+
+                        await this.context.db.update(skills).set({name}).where(and(eq(skills.companyId, req.user?.companyId), eq(skills.id, validatedData.id)));
+
+                        return res.json({
+                            id: validatedData.id,
+                        });
+
+                    } else {
+                        return res.status(201).json({
+                            error: "Skill already exists",
+                        });
+                    }
+
+                } else {
+
+                    const [skill] = await this.context.db.select().from(skills).where(and(eq(skills.companyId, req.user.companyId), eq(skills.name, validatedData.name)));
+
+                    if (!skill) {
+
+                        const result = await this.context.db.insert(skills).values({
+                            name: validatedData.name,
+                            companyId: req.user?.companyId,
+                        }).$returningId();
+
+                        return res.json({
+                            id: result[0].id,
+                        });
+
+                    } else {
+                        return res.status(201).json({
+                            error: "Skill already exists",
+                        });
+                    }
+
+                }
 
             } else {
                 return res.status(500).json({error: "Failed to create skill"});
@@ -95,9 +130,13 @@ export class SkillsController {
         const validatedData = IdParamSchema.parse(req.params);
 
         try {
-            await this.context.db.delete(skills).where(eq(skills.id, validatedData.id))
-            res.json({});
+            if (req.user?.companyId) {
+                await this.context.db.delete(skills).where(and(eq(skills.id, validatedData.id), eq(skills.companyId, req.user.companyId)));
+                res.json({id: validatedData.id});
 
+            } else {
+                res.status(500).json({error: "Failed to create project"});
+            }
         } catch (error) {
 
             if (error instanceof Error) {

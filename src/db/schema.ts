@@ -1,4 +1,4 @@
-import {mysqlTable, serial, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
+import {mysqlTable, serial,unique, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
 import {UserRoles} from "../enums/UserRoles";
 
 export const company = mysqlTable("company", {
@@ -108,14 +108,20 @@ export const taskMembers = mysqlTable("taskMembers", {
 export const skills = mysqlTable("skills", {
     id: int('id').autoincrement().primaryKey(),
     name: varchar("name", {length: 255}).notNull(),
-    companyId: int().notNull(),
+    companyId: int('companyId').notNull(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
-    companyFk: foreignKey({
-        columns: [table.companyId],
-        foreignColumns: [company.id],
-    }).onDelete("cascade")
-}));
+        uniqueCompanySkill: unique("skills_company_name_unique").on(
+            table.name,
+            table.companyId
+        ),
+        companyFk: foreignKey({
+            columns: [table.companyId],
+            foreignColumns: [company.id],
+        }).onDelete("cascade"),
+
+    }
+));
 
 
 export const memberSkills = mysqlTable("memberSkills", {

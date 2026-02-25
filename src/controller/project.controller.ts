@@ -1,13 +1,9 @@
 import {NextFunction, Request, Response} from "express";
-import {db} from "../db";
-import {projectMembers, projects, users} from "../db/schema";
+import {projectMembers, projects} from "../db/schema";
 import {eq} from "drizzle-orm";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import {ZodError} from "zod";
-import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
-import {DeleteProjectSchema, ProjectSchema} from "../schemas/project.schema";
+import {ProjectSchema} from "../schemas/project.schema";
+import {IdParamSchema} from "../schemas/IdParamSchema";
 
 export class ProjectController {
 
@@ -73,7 +69,7 @@ export class ProjectController {
 
     delete = async (req: Request, res: Response) => {
 
-        const validatedData = DeleteProjectSchema.parse(req.body);
+        const validatedData = IdParamSchema.parse(req.body);
 
         try {
             await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))

@@ -1,14 +1,8 @@
 import {NextFunction, Request, Response} from "express";
-import {db} from "../db";
-import {projectMembers, projects, users} from "../db/schema";
+import { projects} from "../db/schema";
 import {eq} from "drizzle-orm";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import {ZodError} from "zod";
-import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
-import {DeleteProjectSchema, ProjectSchema} from "../schemas/project.schema";
-import {TaskSchema} from "../schemas/task.schema";
+import {IdParamSchema} from "../schemas/IdParamSchema";
 
 export class TaskController {
 
@@ -43,31 +37,6 @@ export class TaskController {
 
         try {
 
-            // const result = await this.context.db.insert(projects).values({
-            //     title: validatedData.title,
-            //     description: validatedData.description,
-            // });
-            //
-            // const lid: number = result[0].insertId;
-            //
-            //
-            // this.context.db.delete(projectMembers).where(eq(projectMembers.projectId, lid))
-            //
-            // if (lid && validatedData.members?.length) {
-            //
-            //     validatedData.members.forEach(async (member) => {
-            //
-            //         const projectMember = await this.context.db.insert(projectMembers).values({
-            //             projectId: lid,
-            //             userId: member,
-            //         });
-            //
-            //         // console.log(projectMember);
-            //
-            //     })
-            //
-            //
-            // }
 
 
             res.json({});
@@ -82,7 +51,7 @@ export class TaskController {
 
     delete = async (req: Request, res: Response) => {
 
-        const validatedData = DeleteProjectSchema.parse(req.body);
+        const validatedData = IdParamSchema.parse(req.body);
 
         try {
             await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))

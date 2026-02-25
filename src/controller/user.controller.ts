@@ -1,11 +1,6 @@
 import {Request, Response} from "express";
 import {db} from "../db";
 import {users} from "../db/schema";
-import {eq} from "drizzle-orm";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import {ZodError} from "zod";
-import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
 
 export class UserController {
