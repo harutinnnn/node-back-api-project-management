@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import {ZodError} from "zod";
 import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
+import {UserRoles} from "../enums/UserRoles";
 
 export class AuthController {
 
@@ -43,7 +44,8 @@ export class AuthController {
                     name: validatedData.name,
                     email: validatedData.email,
                     phone: validatedData.phone,
-                    password: hashedPassword
+                    password: hashedPassword,
+                    role: UserRoles.ADMIN
                 });
 
                 const [newUser] = await trx.select().from(users).where(eq(users.email, validatedData.email));

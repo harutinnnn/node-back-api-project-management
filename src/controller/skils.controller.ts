@@ -1,24 +1,16 @@
 import {NextFunction, Request, Response} from "express";
-import {db} from "../db";
-import {projectMembers, projects, users} from "../db/schema";
+import {skills, users} from "../db/schema";
 import {eq} from "drizzle-orm";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import {ZodError} from "zod";
-import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
-import {ProjectSchema} from "../schemas/project.schema";
-import {TaskSchema} from "../schemas/task.schema";
 import {MemberSchema} from "../schemas/members.schema";
-import {UserRoles} from "../enums/UserRoles";
 import {IdParamSchema} from "../schemas/IdParamSchema";
+import {SkillsSchema} from "../schemas/skills.schema";
 
-export class MembersController {
+export class SkillsController {
 
 
     constructor(private context: AppContext) {
     }
-
 
     index = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -26,14 +18,15 @@ export class MembersController {
             if (req.user?.companyId) {
 
 
-                const members = await this.context.db.select().from(users).where(eq(users.companyId, req.user?.companyId));
-                res.json(members);
+                const result = await this.context.db.select().from(skills).where(eq(skills.companyId, req.user?.companyId));
+                res.json(result);
+
             } else {
                 res.json([]);
             }
 
         } catch (error) {
-            res.status(500).json({error: "Failed to fetch users"});
+            res.status(500).json({error: "Failed to fetch skills"});
         }
 
     }
@@ -41,16 +34,13 @@ export class MembersController {
 
     get = async (req: Request, res: Response, next: NextFunction) => {
 
-
         const {id} = IdParamSchema.parse(req.params);
-
 
         try {
             if (req.user?.companyId) {
 
-                const [member] = await this.context.db.select().from(users).where(eq(users.id, id));
-                delete member.password;
-                return res.json(member);
+                const [skill] = await this.context.db.select().from(skills).where(eq(users.id, id), eq(skills.companyId, req.user.companyId));
+                return res.json(skill);
 
             } else {
                 return res.status(400).json({error: "Email and password are required"});
@@ -70,34 +60,24 @@ export class MembersController {
     create = async (req: Request, res: Response) => {
 
 
-        const validatedData = MemberSchema.parse(req.body);
+        const validatedData = SkillsSchema.parse(req.body);
 
         try {
 
-            const [user] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
+            if (req.user?.companyId) {
 
-            if (!user) {
 
-                const hashedPassword = await bcrypt.hash(Date.now().toString(), 10);
-
-                const result = await this.context.db.insert(users).values({
+                const result = await this.context.db.insert(skills).values({
                     name: validatedData.name,
-                    email: validatedData.email,
-                    phone: validatedData.phone,
                     companyId: req.user?.companyId,
-                    role: UserRoles.USER,
-                    password: hashedPassword
-
                 }).$returningId();
 
-                res.json({
+                return res.json({
                     id: result[0].id,
                 });
 
             } else {
-
-                res.status(201).json({error: "Email already used!"});
-
+                return res.status(500).json({error: "Failed to create skill"});
             }
 
         } catch (error) {
@@ -112,12 +92,10 @@ export class MembersController {
 
     delete = async (req: Request, res: Response) => {
 
-        const validatedData = IdParamSchema.parse(req.body);
+        const validatedData = IdParamSchema.parse(req.params);
 
         try {
-            await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))
-
-            console.log('validatedData.id', validatedData.id)
+            await this.context.db.delete(skills).where(eq(skills.id, validatedData.id))
             res.json({});
 
         } catch (error) {

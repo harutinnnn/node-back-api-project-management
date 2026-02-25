@@ -6,6 +6,3 @@ export const MemberSchema = z.object({
     phone: z.string(),
     email: z.email(),
 });
-export const DeleteTaskSchema = z.object({
-    id: z.coerce.number(),
-});

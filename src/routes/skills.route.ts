@@ -4,8 +4,8 @@ import {AppContext} from "../types/app.context.type";
 import {authenticateJWT} from "../middlewares/auth";
 import multer from "multer";
 import {storage} from "../config/storage";
-import {MembersController} from "../controller/members.controller";
-import {MemberSchema} from "../schemas/members.schema";
+import {SkillsController} from "../controller/skils.controller";
+import {SkillsSchema} from "../schemas/skills.schema";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 
 
@@ -16,38 +16,38 @@ const upload = multer({
     },
 });
 
-export const membersRouter = (context: AppContext) => {
+export const skillsRouter = (context: AppContext) => {
 
     const router = Router();
 
 
-    const membersController = new MembersController(context);
+    const skillsController = new SkillsController(context);
 
     router.get(
         "/",
         authenticateJWT,
-        membersController.index
+        skillsController.index
     );
 
     router.get(
         "/:id",
         authenticateJWT,
         validateParams(IdParamSchema),
-        membersController.get
+        skillsController.get
     );
 
     router.post(
         "/",
         authenticateJWT,
-        validate(MemberSchema),
-        membersController.create
+        validate(SkillsSchema),
+        skillsController.create
     );
 
     router.delete(
-        "/",
+        "/:id",
         authenticateJWT,
-        validate(IdParamSchema),
-        membersController.delete
+        validateParams(IdParamSchema),
+        skillsController.delete
     );
 
     return router
