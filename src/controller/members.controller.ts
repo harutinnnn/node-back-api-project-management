@@ -22,37 +22,58 @@ export class MembersController {
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
-            const members = await this.context.db.select().from(users).where(eq(users.companyId, req.user?.companyId));
+            if (req.user?.companyId) {
 
-            res.json(members);
+
+                const members = await this.context.db.select().from(users).where(eq(users.companyId, req.user?.companyId));
+                res.json(members);
+            } else {
+                res.json([]);
+            }
+
         } catch (error) {
             res.status(500).json({error: "Failed to fetch users"});
         }
 
     }
 
+
+    /**
+     * @param req
+     * @param res
+     */
     create = async (req: Request, res: Response) => {
 
 
         const validatedData = MemberSchema.parse(req.body);
 
-
         try {
 
-            const hashedPassword = await bcrypt.hash(Date.now().toString(), 10);
+            const [user] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
 
-            const result = await this.context.db.insert(users).values({
-                name: validatedData.name,
-                email: validatedData.email,
-                companyId: req.user?.companyId,
-                role: UserRoles.USER,
-                password: hashedPassword
+            if (!user) {
 
-            }).$returningId();
+                const hashedPassword = await bcrypt.hash(Date.now().toString(), 10);
 
-            res.json({
-                id: result[0].id,
-            });
+                const result = await this.context.db.insert(users).values({
+                    name: validatedData.name,
+                    email: validatedData.email,
+                    phone: validatedData.phone,
+                    companyId: req.user?.companyId,
+                    role: UserRoles.USER,
+                    password: hashedPassword
+
+                }).$returningId();
+
+                res.json({
+                    id: result[0].id,
+                });
+
+            } else {
+
+                res.status(201).json({error: "Email already used!"});
+
+            }
 
         } catch (error) {
             console.log(error)

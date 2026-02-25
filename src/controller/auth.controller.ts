@@ -42,6 +42,7 @@ export class AuthController {
                     companyId: result[0].id,
                     name: validatedData.name,
                     email: validatedData.email,
+                    phone: validatedData.phone,
                     password: hashedPassword
                 });
 
@@ -54,7 +55,7 @@ export class AuthController {
                 // Save refresh token to db
                 await trx.update(users).set({refreshToken}).where(eq(users.id, newUser.id));
 
-                res.status(401).json({
+                res.status(200).json({
                     token,
                     refreshToken,
                     user: {id: newUser.id, name: newUser.name, email: newUser.email}
@@ -80,7 +81,6 @@ export class AuthController {
 
     }
 
-
     authMe = async (req: Request, res: Response) => {
 
         try {
@@ -91,6 +91,7 @@ export class AuthController {
             res.status(400).json({message: "Invalid token"});
         }
     }
+
     login = async (req: Request, res: Response) => {
 
         const {email, password} = req.body;
