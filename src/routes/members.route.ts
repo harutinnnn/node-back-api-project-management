@@ -1,12 +1,12 @@
 import {Router} from 'express';
-import {validate} from "../middlewares/validate";
+import {validate, validateParams} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
 import {authenticateJWT} from "../middlewares/auth";
 import {DeleteProjectSchema, ProjectSchema} from "../schemas/project.schema";
 import multer from "multer";
 import {storage} from "../config/storage";
 import {MembersController} from "../controller/members.controller";
-import {MemberSchema} from "../schemas/members.schema";
+import {DeleteTaskSchema, MemberSchema} from "../schemas/members.schema";
 
 
 const upload = multer({
@@ -27,6 +27,13 @@ export const membersRouter = (context: AppContext) => {
         "/",
         authenticateJWT,
         membersController.index
+    );
+
+    router.get(
+        "/:id",
+        authenticateJWT,
+        validateParams(DeleteTaskSchema),
+        membersController.get
     );
 
     router.post(

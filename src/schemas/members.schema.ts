@@ -7,5 +7,5 @@ export const MemberSchema = z.object({
     email: z.email(),
 });
 export const DeleteTaskSchema = z.object({
-    id: z.int(),
+    id: z.coerce.number(),
 });

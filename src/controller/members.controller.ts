@@ -9,7 +9,7 @@ import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
 import {DeleteProjectSchema, ProjectSchema} from "../schemas/project.schema";
 import {TaskSchema} from "../schemas/task.schema";
-import {MemberSchema} from "../schemas/members.schema";
+import {DeleteTaskSchema, MemberSchema} from "../schemas/members.schema";
 import {UserRoles} from "../enums/UserRoles";
 
 export class MembersController {
@@ -29,6 +29,30 @@ export class MembersController {
                 res.json(members);
             } else {
                 res.json([]);
+            }
+
+        } catch (error) {
+            res.status(500).json({error: "Failed to fetch users"});
+        }
+
+    }
+
+
+    get = async (req: Request, res: Response, next: NextFunction) => {
+
+
+        const {id} = DeleteTaskSchema.parse(req.params);
+
+
+        try {
+            if (req.user?.companyId) {
+
+                const [member] = await this.context.db.select().from(users).where(eq(users.id, id));
+                delete member.password;
+                return res.json(member);
+
+            } else {
+                return res.status(400).json({error: "Email and password are required"});
             }
 
         } catch (error) {

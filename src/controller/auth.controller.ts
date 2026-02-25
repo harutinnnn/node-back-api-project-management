@@ -111,7 +111,7 @@ export class AuthController {
             }
 
             const payload = {id: user.id, email: user.email};
-            const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", {expiresIn: "15m"});
+            const token = jwt.sign(payload, process.env.JWT_SECRET || "default_super_secret_key", {expiresIn: "1m"});
             const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "default_refresh_secret", {expiresIn: "7d"});
 
             // Save refresh token to db
