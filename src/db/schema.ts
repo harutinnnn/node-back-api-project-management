@@ -13,6 +13,7 @@ export const company = mysqlTable("company", {
 export const users = mysqlTable("users", {
     id: int('id').autoincrement().primaryKey(),
     companyId: int('companyId').references(() => company.id),
+    professionId: int('professionId').references(() => professions.id),
     name: varchar("name", {length: 255}).notNull(),
     email: varchar("email", {length: 255}).notNull().unique(),
     phone: varchar("phone", {length: 255}).notNull(),
@@ -25,6 +26,10 @@ export const users = mysqlTable("users", {
         columns: [table.companyId],
         foreignColumns: [company.id],
     }).onDelete("cascade"),
+    professionIdFk: foreignKey({
+        columns: [table.professionId],
+        foreignColumns: [professions.id],
+    }).onDelete("cascade"),
 }));
 
 
@@ -35,7 +40,7 @@ export const projects = mysqlTable("projects", {
     description: text("description").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
-    projectFk: foreignKey({
+    companyFk: foreignKey({
         columns: [table.companyId],
         foreignColumns: [company.id],
     }).onDelete("cascade"),
@@ -78,7 +83,7 @@ export const taskFiles = mysqlTable("taskFiles", {
     file: varchar("file", {length: 255}).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
-    projectFk: foreignKey({
+    taskFk: foreignKey({
         columns: [table.taskId],
         foreignColumns: [tasks.id],
     }).onDelete("cascade")
@@ -90,7 +95,7 @@ export const taskMembers = mysqlTable("taskMembers", {
     taskId: int('taskId').notNull().references(() => tasks.id),
     userId: int('userId').notNull().references(() => users.id),
 }, (table) => ({
-    projectFk: foreignKey({
+    taskFk: foreignKey({
         columns: [table.taskId],
         foreignColumns: [tasks.id],
     }).onDelete("cascade"),
@@ -99,6 +104,47 @@ export const taskMembers = mysqlTable("taskMembers", {
         foreignColumns: [users.id],
     }).onDelete("cascade")
 }))
+
+export const skills = mysqlTable("skills", {
+    id: int('id').autoincrement().primaryKey(),
+    name: varchar("name", {length: 255}).notNull(),
+    companyId: int().notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+    companyFk: foreignKey({
+        columns: [table.companyId],
+        foreignColumns: [company.id],
+    }).onDelete("cascade")
+}));
+
+
+export const memberSkills = mysqlTable("memberSkills", {
+    memberId: int().notNull(),
+    skillId: int().notNull()
+}, (table) => ({
+    memberFk: foreignKey({
+        columns: [table.memberId],
+        foreignColumns: [users.id],
+    }).onDelete("cascade"),
+    skillFk: foreignKey({
+        columns: [table.skillId],
+        foreignColumns: [skills.id],
+    }).onDelete("cascade")
+}));
+
+
+export const professions = mysqlTable("professions", {
+    id: int('id').autoincrement().primaryKey(),
+    name: varchar("name", {length: 255}).notNull(),
+    companyId: int().notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+    projectFk: foreignKey({
+        columns: [table.companyId],
+        foreignColumns: [company.id],
+    }).onDelete("cascade")
+}));
+
 
 
 
