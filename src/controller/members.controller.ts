@@ -77,6 +77,8 @@ export class MembersController {
 
             if (!user) {
 
+
+                console.log('validatedData',validatedData)
                 const hashedPassword = await bcrypt.hash(Date.now().toString(), 10);
 
                 const result = await this.context.db.insert(users).values({
@@ -84,6 +86,7 @@ export class MembersController {
                     email: validatedData.email,
                     phone: validatedData.phone,
                     companyId: req.user?.companyId,
+                    professionId: validatedData.professionId,
                     role: UserRoles.USER,
                     password: hashedPassword
 
