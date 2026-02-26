@@ -6,7 +6,7 @@ global {
 
         // eslint-disable-next-line @typescript-eslint/no-empty-interface
         interface User {
-            id: string;
+            id: number;
             email: string;
             role: string;
             name: string;

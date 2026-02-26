@@ -5,6 +5,7 @@ import {UserSchema} from "../schemas/user.schema";
 import {validate} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
 import {authenticateJWT} from "../middlewares/auth";
+import {UpdateUserSchema} from "../schemas/update.user.schema";
 
 export const authRouter = (context: AppContext) => {
 
@@ -26,6 +27,13 @@ export const authRouter = (context: AppContext) => {
     );
 
     router.post(
+        "/me",
+        validate(UpdateUserSchema),
+        authenticateJWT,
+        authController.updateMe
+    );
+
+    router.post(
         "/register",
         validate(UserSchema),
         authController.register
@@ -41,7 +49,6 @@ export const authRouter = (context: AppContext) => {
         "/logout",
         authController.logout
     );
-
 
 
     return router

@@ -1,12 +1,14 @@
 import {Request, Response} from "express";
-import {company, users} from "../db/schema";
-import {eq} from "drizzle-orm";
+import {company, professions, users} from "../db/schema";
+import {and, eq} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {ZodError} from "zod";
 import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
 import {UserRoles} from "../enums/UserRoles";
+import {MemberSchema} from "../schemas/members.schema";
+import {UpdateUserSchema} from "../schemas/update.user.schema";
 
 export class AuthController {
 
@@ -86,6 +88,27 @@ export class AuthController {
     authMe = async (req: Request, res: Response) => {
 
         try {
+
+            res.json(req.user);
+
+        } catch (err) {
+            res.status(400).json({message: "Invalid token"});
+        }
+    }
+
+    updateMe = async (req: Request, res: Response) => {
+
+
+        try {
+
+            const validatedData = UpdateUserSchema.parse(req.body);
+
+            const name = validatedData.name;
+            const phone = validatedData.phone;
+            const professionId = validatedData.professionId;
+
+            await this.context.db.update(users).set({name, phone, professionId}).where(eq(users.id, Number(req.user?.id)));
+
 
             res.json(req.user);
 
