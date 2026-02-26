@@ -31,12 +31,12 @@ export class AuthController {
             // Check if user already exists
             const [existingUser] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
             if (existingUser) {
-                return res.status(400).json({error: "User with this email already exists"});
+                return res.status(201).json({error: "User with this email already exists"});
             }
 
             const [existingCompany] = await this.context.db.select().from(company).where(eq(company.name, validatedData.companyName));
             if (existingCompany) {
-                return res.status(400).json({error: "Company with this name already exists"});
+                return res.status(201).json({error: "Company with this name already exists"});
             }
 
             this.context.db.transaction(async (trx: any) => {
