@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
-import {users} from "../db/schema";
-import {and, eq} from "drizzle-orm";
+import {memberSkills, skills, users} from "../db/schema";
+import {and, eq, inArray} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import {AppContext} from "../types/app.context.type";
 import {MemberSchema} from "../schemas/members.schema";
@@ -11,7 +11,8 @@ import {newMemberTemplate} from "../modules/mail/templates/newMember.template";
 import {generatePassword} from "../helpers/password.helper";
 import * as fs from "node:fs";
 import path from "node:path";
-import * as wasi from "node:wasi";
+import {UserType} from "../types/user.type";
+import {SkillType} from "../types/skill.type";
 
 export class MembersController {
 
@@ -25,9 +26,30 @@ export class MembersController {
         try {
             if (req.user?.companyId) {
 
+                const membersJoinSkills: { user: UserType, skills: SkillType[] }[] = []
+                const members: UserType[] = await this.context.db
+                    .select().from(users)
+                    .where(eq(users.companyId, req.user?.companyId));
 
-                const members = await this.context.db.select().from(users).where(eq(users.companyId, req.user?.companyId));
-                res.json(members);
+                const memberIds: number[] = members.map(member => member.id);
+                if (memberIds.length > 0) {
+                    const skillsResult: SkillType[] = await this.context.db
+                        .select({id: skills.id, name: skills.name, memberId: memberSkills.memberId}).from(memberSkills)
+                        .innerJoin(skills, eq(memberSkills.skillId, skills.id))
+                        .where(inArray(memberSkills.memberId, memberIds));
+
+                    console.log(skillsResult)
+
+                    members.forEach((member) => {
+                        membersJoinSkills.push({
+                            user: member,
+                            skills: skillsResult.filter(skill => skill.memberId === member.id),
+                        });
+                    })
+                }
+
+
+                res.json(membersJoinSkills);
             } else {
                 res.json([]);
             }
@@ -41,13 +63,15 @@ export class MembersController {
 
     get = async (req: Request, res: Response, next: NextFunction) => {
 
-
         const {id} = IdParamSchema.parse(req.params);
 
         try {
             if (req.user?.companyId) {
 
-                const [member] = await this.context.db.select().from(users).where(and(eq(users.id, id), eq(users.companyId, req.user.companyId)));
+                const [member] =
+                    await this.context.db
+                        .select().from(users)
+                        .where(and(eq(users.id, id), eq(users.companyId, req.user.companyId)));
                 delete member.password;
                 return res.json(member);
 

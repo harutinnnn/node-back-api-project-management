@@ -1,6 +1,7 @@
 import {mysqlTable, serial, unique, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
 import {UserRoles} from "../enums/UserRoles";
 import {Gender} from "../enums/Gender";
+import {Statuses} from "../enums/Statuses";
 
 export const company = mysqlTable("company", {
     id: int('id').autoincrement().primaryKey(),
@@ -23,6 +24,8 @@ export const users = mysqlTable("users", {
     avatar: varchar("avatar", {length: 255}),
     gender: mysqlEnum('gender', [Gender.MALE, Gender.FEMALE, Gender.UNKNOWN]).notNull().default(Gender.UNKNOWN),
     role: mysqlEnum('role', [UserRoles.ADMIN, UserRoles.USER]).notNull().default(UserRoles.USER),
+    status: mysqlEnum('status', [Statuses.PENDING, Statuses.PUBLISHED, Statuses.BLOCKED,Statuses.NOT_ACTIVATED]).notNull().default(Statuses.NOT_ACTIVATED),
+    activationToken:varchar('activationToken',{length: 255}),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     projectFk: foreignKey({

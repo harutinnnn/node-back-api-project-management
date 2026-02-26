@@ -11,6 +11,12 @@ import {MemberSchema} from "../schemas/members.schema";
 import {UpdateUserSchema} from "../schemas/update.user.schema";
 import * as wasi from "node:wasi";
 import {MemberSkillsType} from "../types/skill.type";
+import {Statuses} from "../enums/Statuses";
+import {randomUUID} from "node:crypto";
+import {mailService} from "../modules/mail/mail.service";
+import {newMemberTemplate} from "../modules/mail/templates/newMember.template";
+import {TokenParamSchema} from "../schemas/IdParamSchema";
+import {use} from "passport";
 
 export class AuthController {
 
@@ -42,14 +48,18 @@ export class AuthController {
                 }).$returningId();
 
                 const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+                const activationHash = randomUUID();
 
                 await trx.insert(users).values({
                     companyId: result[0].id,
                     name: validatedData.name,
                     email: validatedData.email,
+                    gender: validatedData.gender,
                     phone: validatedData.phone,
                     password: hashedPassword,
-                    role: UserRoles.ADMIN
+                    role: UserRoles.ADMIN,
+                    status: Statuses.NOT_ACTIVATED,
+                    activationHash: activationHash,
                 });
 
                 const [newUser] = await trx.select().from(users).where(eq(users.email, validatedData.email));
@@ -60,6 +70,16 @@ export class AuthController {
 
                 // Save refresh token to db
                 await trx.update(users).set({refreshToken}).where(eq(users.id, newUser.id));
+
+
+                const activationLink = process.env.SITE_URL + '/auth/activation/' + activationHash;
+                //Send email activation
+                await mailService.sendMail({
+                    to: validatedData.email,
+                    subject: "Activation mail",
+                    html: newMemberTemplate(validatedData.name, activationLink),
+                });
+
 
                 res.status(200).json({
                     token,
@@ -109,6 +129,46 @@ export class AuthController {
             res.status(400).json({message: "Invalid token"});
         }
     }
+
+
+    activate = async (req: Request, res: Response) => {
+
+        const validatedData = TokenParamSchema.parse(req.params);
+
+
+        try {
+
+
+            const activationToken = validatedData.token;
+            const status = Statuses.PUBLISHED;
+
+            const [user] = await this.context.db.select().from(users).where(eq(users.activationToken, activationToken));
+            console.log('user', user)
+
+            if (user) {
+
+
+                await this.context.db.update(users).set({
+                    activationToken: null,
+                    status: status
+                }).where(eq(users.id, user.id));
+
+                return res.redirect(process.env.APP_SITE_URL as string);
+
+                //TODO check wrong-activation-code path not redirect or cache
+            } else {
+                console.log('wrong 1')
+                return res.redirect((process.env.APP_SITE_URL as string) + '/wrong-activation-code');
+            }
+
+
+        } catch (err) {
+            console.log('wrong 2')
+            return res.redirect((process.env.APP_SITE_URL as string) + '/wrong-activation-code');
+        }
+
+    }
+
 
     updateMe = async (req: Request, res: Response) => {
 
