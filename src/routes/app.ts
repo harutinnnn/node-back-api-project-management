@@ -9,6 +9,7 @@ import {taskstRouter} from "./tasks.route";
 import {membersRouter} from "./members.route";
 import {skillsRouter} from "./skills.route";
 import {professionRouter} from "./profession.route";
+import path from "node:path";
 
 export const createApp = (context: AppContext) => {
 
@@ -18,7 +19,7 @@ export const createApp = (context: AppContext) => {
     app.use(cors());
     app.use(express.json());
     app.use(passport.initialize());
-
+    app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
     app.use('/auth', authRouter(context));
     app.use('/users', userRouter(context));

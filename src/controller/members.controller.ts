@@ -1,20 +1,17 @@
 import {NextFunction, Request, Response} from "express";
-import {db} from "../db";
-import {projectMembers, projects, users} from "../db/schema";
+import {users} from "../db/schema";
 import {and, eq} from "drizzle-orm";
-import bcrypt, {hashSync} from "bcrypt";
-import jwt from "jsonwebtoken";
-import {ZodError} from "zod";
-import {UserSchema} from "../schemas/user.schema";
+import bcrypt from "bcrypt";
 import {AppContext} from "../types/app.context.type";
-import {ProjectSchema} from "../schemas/project.schema";
-import {TaskSchema} from "../schemas/task.schema";
 import {MemberSchema} from "../schemas/members.schema";
 import {UserRoles} from "../enums/UserRoles";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {mailService} from "../modules/mail/mail.service";
 import {newMemberTemplate} from "../modules/mail/templates/newMember.template";
 import {generatePassword} from "../helpers/password.helper";
+import * as fs from "node:fs";
+import path from "node:path";
+import * as wasi from "node:wasi";
 
 export class MembersController {
 
@@ -86,7 +83,6 @@ export class MembersController {
                 if (!user) {
 
 
-
                     const pass = generatePassword(8);
                     const hashedPassword = await bcrypt.hash(pass, 10);
 
@@ -133,6 +129,51 @@ export class MembersController {
     }
 
 
+    avatar = async (req: Request, res: Response) => {
+
+        const avatarFolderPath = path.join(__dirname, '../../uploads/members');
+
+
+        try {
+
+            if (!fs.existsSync(avatarFolderPath)) {
+                fs.mkdirSync(avatarFolderPath)
+            }
+
+            const name = req.file?.filename;
+            const imagePath = req.file?.path as string;
+
+            const [member] = await this.context.db.select().from(users).where(eq(users.id, Number(req.user?.id)));
+
+            if (member) {
+                const oldAvatar = path.join(__dirname, '../../', member.avatar);
+
+                const newPath = path.join(__dirname, `../../uploads/members/${name}`);
+                fs.rename(imagePath, newPath, async (err) => {
+                    if (!err) {
+
+                        if (fs.existsSync(oldAvatar)) {
+                            fs.unlinkSync(oldAvatar)
+                        }
+
+                        const imageUrl = `/uploads/members/${name}`
+                        await this.context.db.update(users).set({avatar: imageUrl}).where(eq(users.id, Number(req.user?.id)));
+
+
+                        res.json({avatar: imageUrl})
+                    } else {
+                        res.status(201).json({error: "Some thing went wrong"})
+                    }
+                })
+            } else {
+                res.status(201).json({error: "Some thing went wrong"})
+            }
+        } catch (err) {
+            console.log(err)
+
+        }
+
+    }
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.body);

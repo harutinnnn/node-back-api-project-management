@@ -1,5 +1,6 @@
 import {mysqlTable, serial, unique, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
 import {UserRoles} from "../enums/UserRoles";
+import {Gender} from "../enums/Gender";
 
 export const company = mysqlTable("company", {
     id: int('id').autoincrement().primaryKey(),
@@ -20,6 +21,7 @@ export const users = mysqlTable("users", {
     password: varchar("password", {length: 255}).notNull(),
     refreshToken: varchar("refresh_token", {length: 255}),
     avatar: varchar("avatar", {length: 255}),
+    gender: mysqlEnum('gender', [Gender.MALE, Gender.FEMALE, Gender.UNKNOWN]).notNull().default(Gender.UNKNOWN),
     role: mysqlEnum('role', [UserRoles.ADMIN, UserRoles.USER]).notNull().default(UserRoles.USER),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({

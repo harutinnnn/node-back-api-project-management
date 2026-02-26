@@ -10,13 +10,3 @@ export const storage = multer.diskStorage({
         cb(null, `${uniqueSuffix}-${file.originalname}`);
     },
 });
-
-/*
-const fileFilter: multer.Options["fileFilter"] = (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-        cb(null, true);
-    } else {
-        cb(new Error("Only image files are allowed"));
-    }
-};
-*/

@@ -2,12 +2,11 @@ import {Router} from 'express';
 import {validate} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
 import {authenticateJWT} from "../middlewares/auth";
-import {ProjectController} from "../controller/project.controller";
-import {DeleteProjectSchema, ProjectSchema} from "../schemas/project.schema";
 import {TaskController} from "../controller/task.controller";
 import {TaskSchema} from "../schemas/task.schema";
 import multer from "multer";
 import {storage} from "../config/storage";
+import {IdParamSchema} from "../schemas/IdParamSchema";
 
 
 const upload = multer({
@@ -41,7 +40,7 @@ export const taskstRouter = (context: AppContext) => {
     router.delete(
         "/delete",
         authenticateJWT,
-        validate(DeleteProjectSchema),
+        validate(IdParamSchema),
         taskController.delete
     );
 
