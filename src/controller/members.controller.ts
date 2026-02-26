@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from "express";
 import {db} from "../db";
 import {projectMembers, projects, users} from "../db/schema";
 import {and, eq} from "drizzle-orm";
-import bcrypt from "bcrypt";
+import bcrypt, {hashSync} from "bcrypt";
 import jwt from "jsonwebtoken";
 import {ZodError} from "zod";
 import {UserSchema} from "../schemas/user.schema";
@@ -12,6 +12,9 @@ import {TaskSchema} from "../schemas/task.schema";
 import {MemberSchema} from "../schemas/members.schema";
 import {UserRoles} from "../enums/UserRoles";
 import {IdParamSchema} from "../schemas/IdParamSchema";
+import {mailService} from "../modules/mail/mail.service";
+import {newMemberTemplate} from "../modules/mail/templates/newMember.template";
+import {generatePassword} from "../helpers/password.helper";
 
 export class MembersController {
 
@@ -68,38 +71,56 @@ export class MembersController {
      */
     create = async (req: Request, res: Response) => {
 
-
         const validatedData = MemberSchema.parse(req.body);
+
 
         try {
 
-            const [user] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
+            const currentUser = req.user;
 
-            if (!user) {
+            if (currentUser?.role === UserRoles.ADMIN) {
 
 
-                console.log('validatedData',validatedData)
-                const hashedPassword = await bcrypt.hash(Date.now().toString(), 10);
+                const [user] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
 
-                const result = await this.context.db.insert(users).values({
-                    name: validatedData.name,
-                    email: validatedData.email,
-                    phone: validatedData.phone,
-                    companyId: req.user?.companyId,
-                    professionId: validatedData.professionId,
-                    role: UserRoles.USER,
-                    password: hashedPassword
+                if (!user) {
 
-                }).$returningId();
 
-                res.json({
-                    id: result[0].id,
-                });
 
+                    const pass = generatePassword(8);
+                    const hashedPassword = await bcrypt.hash(pass, 10);
+
+                    const result = await this.context.db.insert(users).values({
+                        name: validatedData.name,
+                        email: validatedData.email,
+                        phone: validatedData.phone,
+                        companyId: req.user?.companyId,
+                        professionId: validatedData.professionId,
+                        role: UserRoles.USER,
+                        password: hashedPassword
+
+                    }).$returningId();
+
+
+                    //Send mail
+                    await mailService.sendMail({
+                        to: validatedData.email,
+                        subject: "Reset Your Password",
+                        html: newMemberTemplate(validatedData.name, pass),
+                    });
+
+
+                    res.json({
+                        id: result[0].id,
+                    });
+
+                } else {
+
+                    res.status(201).json({error: "Email already used!"});
+
+                }
             } else {
-
-                res.status(201).json({error: "Email already used!"});
-
+                res.status(201).json({error: "You dont have a permission to create member!"});
             }
 
         } catch (error) {
