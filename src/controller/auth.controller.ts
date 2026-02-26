@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {company, professions, users} from "../db/schema";
+import {company, memberSkills, professions, skills, users} from "../db/schema";
 import {and, eq} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -9,6 +9,8 @@ import {AppContext} from "../types/app.context.type";
 import {UserRoles} from "../enums/UserRoles";
 import {MemberSchema} from "../schemas/members.schema";
 import {UpdateUserSchema} from "../schemas/update.user.schema";
+import * as wasi from "node:wasi";
+import {MemberSkillsType} from "../types/skill.type";
 
 export class AuthController {
 
@@ -89,8 +91,20 @@ export class AuthController {
 
         try {
 
-            res.json(req.user);
+            if (req.user?.id) {
 
+
+                const memberSkillsData: MemberSkillsType[] = await this.context.db.select().from(memberSkills).where(eq(memberSkills.memberId, req.user.id));
+
+
+                res.json({
+                    user: req.user,
+                    skills: memberSkillsData.map(item => item.skillId)
+                });
+
+            } else {
+                res.status(400).json({message: "Invalid token"});
+            }
         } catch (err) {
             res.status(400).json({message: "Invalid token"});
         }
@@ -103,12 +117,25 @@ export class AuthController {
 
             const validatedData = UpdateUserSchema.parse(req.body);
 
+
             const name = validatedData.name;
             const phone = validatedData.phone;
             const professionId = validatedData.professionId;
 
-            await this.context.db.update(users).set({name, phone, professionId}).where(eq(users.id, Number(req.user?.id)));
+            await this.context.db.update(users).set({
+                name,
+                phone,
+                professionId
+            }).where(eq(users.id, Number(req.user?.id)));
 
+            if (validatedData.skills?.length) {
+
+                await this.context.db.delete(memberSkills).where(eq(memberSkills.memberId, Number(req.user?.id)))
+                validatedData.skills.forEach(async (skill: any) => {
+                    await this.context.db.insert(memberSkills).values({memberId: Number(req.user?.id), skillId: skill});
+                })
+
+            }
 
             res.json(req.user);
 

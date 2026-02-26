@@ -105,7 +105,7 @@ export class MembersController {
                     //Send mail
                     await mailService.sendMail({
                         to: validatedData.email,
-                        subject: "Reset Your Password",
+                        subject: "Creation new member account",
                         html: newMemberTemplate(validatedData.name, pass),
                     });
 
