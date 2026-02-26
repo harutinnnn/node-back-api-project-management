@@ -146,16 +146,20 @@ export class MembersController {
             const [member] = await this.context.db.select().from(users).where(eq(users.id, Number(req.user?.id)));
 
             if (member) {
-                const oldAvatar = path.join(__dirname, '../../', member.avatar);
 
                 const newPath = path.join(__dirname, `../../uploads/members/${name}`);
                 fs.rename(imagePath, newPath, async (err) => {
                     if (!err) {
 
-                        if (fs.existsSync(oldAvatar)) {
-                            fs.unlinkSync(oldAvatar)
-                        }
+                        if (member.avatar && member.avatar.length) {
 
+                            const oldAvatar = path.join(__dirname, '../../', member.avatar);
+
+
+                            if (fs.existsSync(oldAvatar)) {
+                                fs.unlinkSync(oldAvatar)
+                            }
+                        }
                         const imageUrl = `/uploads/members/${name}`
                         await this.context.db.update(users).set({avatar: imageUrl}).where(eq(users.id, Number(req.user?.id)));
 
