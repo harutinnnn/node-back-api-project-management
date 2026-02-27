@@ -59,7 +59,7 @@ export class AuthController {
                     password: hashedPassword,
                     role: UserRoles.ADMIN,
                     status: Statuses.NOT_ACTIVATED,
-                    activationHash: activationHash,
+                    activationToken: activationHash,
                 });
 
                 const [newUser] = await trx.select().from(users).where(eq(users.email, validatedData.email));
@@ -180,12 +180,14 @@ export class AuthController {
 
             const name = validatedData.name;
             const phone = validatedData.phone;
+            const gender = validatedData.gender;
             const professionId = validatedData.professionId;
 
             await this.context.db.update(users).set({
                 name,
                 phone,
-                professionId
+                professionId,
+                gender
             }).where(eq(users.id, Number(req.user?.id)));
 
             if (validatedData.skills?.length) {
@@ -216,6 +218,15 @@ export class AuthController {
             if (!user) {
                 return res.status(401).json({error: "Invalid credentials"});
             }
+
+            if (user.status === Statuses.NOT_ACTIVATED) {
+                return res.status(200).json({error: "Your account not activated please check you email!"});
+            }
+
+            if (user.status === Statuses.BLOCKED) {
+                return res.status(200).json({error: "Your account blocked please contact your company administrator!"});
+            }
+
 
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {

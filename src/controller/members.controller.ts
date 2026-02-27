@@ -13,6 +13,7 @@ import * as fs from "node:fs";
 import path from "node:path";
 import {UserType} from "../types/user.type";
 import {SkillType} from "../types/skill.type";
+import {Statuses} from "../enums/Statuses";
 
 export class MembersController {
 
@@ -114,10 +115,12 @@ export class MembersController {
                         name: validatedData.name,
                         email: validatedData.email,
                         phone: validatedData.phone,
+                        gender: validatedData.gender,
                         companyId: req.user?.companyId,
                         professionId: validatedData.professionId,
                         role: UserRoles.USER,
-                        password: hashedPassword
+                        password: hashedPassword,
+                        status: Statuses.PUBLISHED
 
                     }).$returningId();
 
