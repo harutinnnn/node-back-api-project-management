@@ -193,9 +193,18 @@ export class AuthController {
             if (validatedData.skills?.length) {
 
                 await this.context.db.delete(memberSkills).where(eq(memberSkills.memberId, Number(req.user?.id)))
-                validatedData.skills.forEach(async (skill: any) => {
+/*                validatedData.skills.forEach(async (skill: any) => {
                     await this.context.db.insert(memberSkills).values({memberId: Number(req.user?.id), skillId: skill});
-                })
+                })*/
+
+                const skillPromises = validatedData.skills.map(async (skill: any) => {
+                    return this.context.db.insert(memberSkills).values({
+                        memberId: Number(req.user?.id),
+                        skillId: skill
+                    });
+                });
+
+                await Promise.all(skillPromises);
 
             }
 
