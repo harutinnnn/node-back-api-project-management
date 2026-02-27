@@ -1,7 +1,19 @@
-import {mysqlTable, serial, unique, int, varchar, timestamp, text, foreignKey, mysqlEnum} from "drizzle-orm/mysql-core";
+import {
+    mysqlTable,
+    serial,
+    unique,
+    int,
+    varchar,
+    timestamp,
+    text,
+    foreignKey,
+    mysqlEnum,
+    float
+} from "drizzle-orm/mysql-core";
 import {UserRoles} from "../enums/UserRoles";
 import {Gender} from "../enums/Gender";
 import {Statuses} from "../enums/Statuses";
+import {Priorities} from "../enums/Priorities";
 
 export const company = mysqlTable("company", {
     id: int('id').autoincrement().primaryKey(),
@@ -24,8 +36,8 @@ export const users = mysqlTable("users", {
     avatar: varchar("avatar", {length: 255}),
     gender: mysqlEnum('gender', [Gender.MALE, Gender.FEMALE, Gender.UNKNOWN]).notNull().default(Gender.UNKNOWN),
     role: mysqlEnum('role', [UserRoles.ADMIN, UserRoles.USER]).notNull().default(UserRoles.USER),
-    status: mysqlEnum('status', [Statuses.PENDING, Statuses.PUBLISHED, Statuses.BLOCKED,Statuses.NOT_ACTIVATED]).notNull().default(Statuses.NOT_ACTIVATED),
-    activationToken:varchar('activationToken',{length: 255}),
+    status: mysqlEnum('status', [Statuses.PENDING, Statuses.PUBLISHED, Statuses.BLOCKED, Statuses.NOT_ACTIVATED]).notNull().default(Statuses.NOT_ACTIVATED),
+    activationToken: varchar('activationToken', {length: 255}),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     projectFk: foreignKey({
@@ -41,8 +53,10 @@ export const users = mysqlTable("users", {
 
 export const projects = mysqlTable("projects", {
     id: int('id').autoincrement().primaryKey(),
-    companyId: int('id').references(() => company.id),
+    companyId: int('companyId').references(() => company.id),
+    status: mysqlEnum('status', [Statuses.PENDING, Statuses.ACTIVE, Statuses.FINISHED, Statuses.CANCELED]).notNull().default(Statuses.PENDING),
     title: varchar("title", {length: 255}).notNull(),
+    progress: float('progress'),
     description: text("description").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
@@ -71,9 +85,10 @@ export const projectMembers = mysqlTable("projectMembers", {
 export const tasks = mysqlTable("tasks", {
     id: int('id').autoincrement().primaryKey(),
     title: varchar("title", {length: 255}).notNull(),
-    projectId: int().notNull(),
-    status: mysqlEnum('status', ['pending', 'doing', 'for_check', 'finished']).notNull().default('pending'),
-    priority: mysqlEnum('priority', ['urgent', 'high', 'medium', 'low']).notNull().default('medium'),
+    projectId: int('projectId').notNull(),
+    status: mysqlEnum('status', [Statuses.PENDING, Statuses.DOING, Statuses.FOR_CHECK, Statuses.FINISHED, Statuses.CANCELED]).notNull().default(Statuses.PENDING),
+
+    priority: mysqlEnum('priority', Priorities).notNull().default(Priorities.MEDIUM),
     description: text("description").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({

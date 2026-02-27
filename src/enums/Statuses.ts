@@ -1,6 +1,10 @@
 export enum Statuses {
     PENDING = 'pending',
     PUBLISHED = 'published',
+    DOING = 'doing',
+    FOR_CHECK = 'for_check',
+    FINISHED = 'finished',
+    CANCELED = 'canceled',
     NOT_ACTIVATED = 'not_activated',
     ACTIVE = 'active',
     BLOCKED = 'blocked',
