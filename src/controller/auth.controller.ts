@@ -130,7 +130,6 @@ export class AuthController {
         }
     }
 
-
     activate = async (req: Request, res: Response) => {
 
         const validatedData = TokenParamSchema.parse(req.params);
@@ -169,7 +168,6 @@ export class AuthController {
 
     }
 
-
     updateMe = async (req: Request, res: Response) => {
 
 
@@ -193,9 +191,6 @@ export class AuthController {
             if (validatedData.skills?.length) {
 
                 await this.context.db.delete(memberSkills).where(eq(memberSkills.memberId, Number(req.user?.id)))
-/*                validatedData.skills.forEach(async (skill: any) => {
-                    await this.context.db.insert(memberSkills).values({memberId: Number(req.user?.id), skillId: skill});
-                })*/
 
                 const skillPromises = validatedData.skills.map(async (skill: any) => {
                     return this.context.db.insert(memberSkills).values({

@@ -1,9 +1,9 @@
 import {NextFunction, Request, Response} from "express";
-import {projectMembers, projects} from "../db/schema";
-import {eq} from "drizzle-orm";
+import {and, eq, ne, not} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
-import {ProjectSchema} from "../schemas/project.schema";
 import {IdParamSchema} from "../schemas/IdParamSchema";
+import {projects} from "../db/schema";
+import {ProjectSchema} from "../schemas/project.schema";
 
 export class ProjectController {
 
@@ -11,12 +11,40 @@ export class ProjectController {
     constructor(private context: AppContext) {
     }
 
-
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
-            const projectsList = await this.context.db.select().from(projects);
-            res.json(projectsList);
+            if (req.user?.companyId) {
+
+
+                const result = await this.context.db.select().from(projects).where(eq(projects.companyId, req.user?.companyId));
+                res.json(result);
+
+            } else {
+                res.json([]);
+            }
+
+        } catch (error) {
+            res.status(500).json({error: "Failed to fetch projects"});
+        }
+
+    }
+
+
+    get = async (req: Request, res: Response, next: NextFunction) => {
+
+        const {id} = IdParamSchema.parse(req.params);
+
+        try {
+            if (req.user?.companyId) {
+
+                const [project] = await this.context.db.select().from(projects).where(and(eq(projects.id, id), eq(projects.companyId, req.user.companyId)));
+                return res.json(project);
+
+            } else {
+                return res.status(400).json({error: "Email and password are required"});
+            }
+
         } catch (error) {
             res.status(500).json({error: "Failed to fetch users"});
         }
@@ -27,56 +55,90 @@ export class ProjectController {
 
         const validatedData = ProjectSchema.parse(req.body);
 
-
         try {
 
-            const result = await this.context.db.insert(projects).values({
-                title: validatedData.title,
-                description: validatedData.description,
-            });
+            if (req.user?.companyId) {
 
-            const lid: number = result[0].insertId;
+                if (validatedData.id) {
 
+                    const title = validatedData.title;
+                    const status = validatedData.status;
+                    const description = validatedData.description;
 
-            this.context.db.delete(projectMembers).where(eq(projectMembers.projectId, lid))
+                    const [project] = await this.context.db.select().from(projects).where(and(eq(projects.companyId, req.user.companyId), eq(projects.title, validatedData.title), ne(projects.id, validatedData.id)));
+                    console.log('project',project)
 
-            if (lid && validatedData.members?.length) {
+                    if (!project) {
 
-                validatedData.members.forEach(async (member) => {
+                       const a = await this.context.db.update(projects).set({
+                            title,
+                            description,
+                            status,
+                        }).where(and(eq(projects.companyId, req.user?.companyId), eq(projects.id, validatedData.id)));
 
-                    const projectMember = await this.context.db.insert(projectMembers).values({
-                        projectId: lid,
-                        userId: member,
-                    });
+                        return res.json({
+                            id: validatedData.id,
+                        });
 
-                    // console.log(projectMember);
+                    } else {
+                        return res.status(201).json({
+                            error: "Project already exists",
+                        });
+                    }
 
-                })
+                } else {
 
+                    const [project] = await this.context.db.select().from(projects).where(and(eq(projects.companyId, req.user.companyId), eq(projects.title, validatedData.title)));
 
+                    if (!project) {
+
+                        const result = await this.context.db.insert(projects).values({
+                            title: validatedData.title,
+                            status: validatedData.status,
+                            description: validatedData.description,
+                            companyId: req.user?.companyId,
+                            progress: 0,
+                        }).$returningId();
+
+                        return res.json({
+                            id: result[0].id,
+                        });
+
+                    } else {
+                        return res.status(201).json({
+                            error: "Project already exists",
+                        });
+                    }
+
+                }
+
+            } else {
+                return res.status(500).json({error: "Failed to create project"});
             }
 
-
-            res.json({});
         } catch (error) {
+            console.log(error)
             if (error instanceof Error) {
                 console.error('Error: ' + error.message);
             }
-            res.status(500).json({error: "Failed to create project"});
+            console.log(req)
+            res.status(500).json({error: "Failed to create member"});
         }
     }
 
 
     delete = async (req: Request, res: Response) => {
 
-        const validatedData = IdParamSchema.parse(req.body);
+        const validatedData = IdParamSchema.parse(req.params);
 
         try {
-            await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))
+            if (req.user?.companyId) {
+                await this.context.db.delete(projects).where(and(eq(projects.id, validatedData.id), eq(projects.companyId, req.user.companyId)));
+                res.json({id: validatedData.id});
 
-            console.log('validatedData.id', validatedData.id)
-            res.json({});
-
+            } else {
+                res.status(500).json({error: "Failed to delete project"});
+            }
         } catch (error) {
 
             if (error instanceof Error) {

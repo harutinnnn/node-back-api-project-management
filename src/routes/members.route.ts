@@ -9,10 +9,10 @@ import {MemberSchema} from "../schemas/members.schema";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 
 
-const upload = multer({
+const avatarUpload = multer({
     storage,
     limits: {
-        fileSize: 1024 * 1024, // 5MB
+        fileSize: 2 * 1024 * 1024, // 5MB
     },
 });
 
@@ -46,7 +46,7 @@ export const membersRouter = (context: AppContext) => {
     router.post(
         "/avatar",
         authenticateJWT,
-        upload.single('avatar'),
+        avatarUpload.single('avatar'),
         membersController.avatar
     );
 

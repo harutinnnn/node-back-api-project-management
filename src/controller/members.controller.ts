@@ -39,8 +39,6 @@ export class MembersController {
                         .innerJoin(skills, eq(memberSkills.skillId, skills.id))
                         .where(inArray(memberSkills.memberId, memberIds));
 
-                    console.log(skillsResult)
-
                     members.forEach((member) => {
                         membersJoinSkills.push({
                             user: member,
@@ -85,7 +83,6 @@ export class MembersController {
         }
 
     }
-
 
     /**
      * @param req
@@ -155,7 +152,6 @@ export class MembersController {
         }
     }
 
-
     avatar = async (req: Request, res: Response) => {
 
         const avatarFolderPath = path.join(__dirname, '../../uploads/members');
@@ -205,6 +201,7 @@ export class MembersController {
         }
 
     }
+
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.body);

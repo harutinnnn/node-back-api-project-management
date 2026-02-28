@@ -4,12 +4,12 @@ import passport from "../config/passport";
 import {AppContext} from "../types/app.context.type";
 import {authRouter} from "./auth.route";
 import {userRouter} from "./user.route";
-import {projectRouter} from "./project.route";
 import {taskstRouter} from "./tasks.route";
 import {membersRouter} from "./members.route";
 import {skillsRouter} from "./skills.route";
 import {professionRouter} from "./profession.route";
 import path from "node:path";
+import {projectRouter} from "./project.route";
 
 export const createApp = (context: AppContext) => {
 

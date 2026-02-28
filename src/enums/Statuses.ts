@@ -1,3 +1,5 @@
+import {z} from "zod";
+
 export enum Statuses {
     PENDING = 'pending',
     PUBLISHED = 'published',
@@ -12,4 +14,11 @@ export enum Statuses {
     COMPLETED_SUCCESS = 'completed_success',
     COMPLETED_FAILED = 'completed_failed',
     COMPLETED_ERROR = 'completed_error',
+}
+
+export enum ProjectStatuses {
+    PENDING = Statuses.PENDING,
+    COMPLETED = Statuses.COMPLETED,
+    ACTIVE = Statuses.ACTIVE,
+    FINISHED = Statuses.FINISHED
 }
