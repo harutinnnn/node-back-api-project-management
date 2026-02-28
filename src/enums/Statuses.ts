@@ -18,7 +18,7 @@ export enum Statuses {
 
 export enum ProjectStatuses {
     PENDING = Statuses.PENDING,
-    COMPLETED = Statuses.COMPLETED,
     ACTIVE = Statuses.ACTIVE,
-    FINISHED = Statuses.FINISHED
+    COMPLETED = Statuses.COMPLETED,
+    CANCELED= Statuses.CANCELED
 }

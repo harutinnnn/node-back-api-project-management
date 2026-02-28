@@ -66,7 +66,6 @@ export class ProjectController {
                     const description = validatedData.description;
 
                     const [project] = await this.context.db.select().from(projects).where(and(eq(projects.companyId, req.user.companyId), eq(projects.title, validatedData.title), ne(projects.id, validatedData.id)));
-                    console.log('project',project)
 
                     if (!project) {
 

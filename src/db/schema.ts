@@ -54,7 +54,7 @@ export const users = mysqlTable("users", {
 export const projects = mysqlTable("projects", {
     id: int('id').autoincrement().primaryKey(),
     companyId: int('companyId').references(() => company.id),
-    status: mysqlEnum('status', [Statuses.PENDING, Statuses.ACTIVE, Statuses.FINISHED, Statuses.CANCELED]).notNull().default(Statuses.PENDING),
+    status: mysqlEnum('status', [Statuses.PENDING, Statuses.ACTIVE, Statuses.COMPLETED, Statuses.CANCELED]).notNull().default(Statuses.PENDING),
     title: varchar("title", {length: 255}).notNull(),
     progress: float('progress'),
     description: text("description").notNull(),
