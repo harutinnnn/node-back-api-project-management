@@ -9,6 +9,7 @@ export enum Statuses {
     CANCELED = 'canceled',
     NOT_ACTIVATED = 'not_activated',
     ACTIVE = 'active',
+    ARCHIVED = 'archived',
     BLOCKED = 'blocked',
     COMPLETED = 'completed',
     COMPLETED_SUCCESS = 'completed_success',
@@ -20,5 +21,10 @@ export enum ProjectStatuses {
     PENDING = Statuses.PENDING,
     ACTIVE = Statuses.ACTIVE,
     COMPLETED = Statuses.COMPLETED,
-    CANCELED= Statuses.CANCELED
+    CANCELED = Statuses.CANCELED
+}
+
+export enum BoardColumnStatuses {
+    ACTIVE = Statuses.ACTIVE,
+    ARCHIVED = Statuses.ARCHIVED
 }

@@ -4,6 +4,7 @@ import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {projects} from "../db/schema";
 import {ProjectSchema} from "../schemas/project.schema";
+import {Statuses} from "../enums/Statuses";
 
 export class ProjectController {
 
@@ -69,10 +70,19 @@ export class ProjectController {
 
                     if (!project) {
 
-                       const a = await this.context.db.update(projects).set({
+                        const [currentProject] = await this.context.db.select().from(projects).where(and(eq(projects.companyId, req.user.companyId), eq(projects.id, validatedData.id)));
+
+                        //TODO if set status completed then progress set 100%
+                        let progress: number = currentProject.progress;
+                        if (status === Statuses.COMPLETED.toString()) {
+                            progress = 100;
+                        }
+
+                        const a = await this.context.db.update(projects).set({
                             title,
                             description,
                             status,
+                            progress
                         }).where(and(eq(projects.companyId, req.user?.companyId), eq(projects.id, validatedData.id)));
 
                         return res.json({
@@ -93,7 +103,7 @@ export class ProjectController {
 
                         const result = await this.context.db.insert(projects).values({
                             title: validatedData.title,
-                            status: validatedData.status,
+                            status: Statuses.PENDING,
                             description: validatedData.description,
                             companyId: req.user?.companyId,
                             progress: 0,

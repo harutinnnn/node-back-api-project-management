@@ -1,0 +1,63 @@
+import {Router} from 'express';
+import {validate, validateParams} from "../middlewares/validate";
+import {AppContext} from "../types/app.context.type";
+import {authenticateJWT} from "../middlewares/auth";
+import {IdParamSchema} from "../schemas/IdParamSchema";
+import {ProfessionSchema} from "../schemas/profession.schema";
+import {BoardController} from "../controller/board.controller";
+import {BoardColumnSchema, TaskSchema} from "../schemas/board.column.schema";
+
+
+export const boardRouter = (context: AppContext) => {
+
+    const router = Router();
+
+
+    const boardController = new BoardController(context);
+
+
+    router.post(
+        "/column",
+        authenticateJWT,
+        validate(BoardColumnSchema),
+        boardController.createColumn
+    );
+
+    router.post(
+        "/task",
+        authenticateJWT,
+        validate(TaskSchema),
+        boardController.createTask
+    );
+
+
+    router.get(
+        "/",
+        authenticateJWT,
+        boardController.index
+    );
+
+    router.get(
+        "/:id",
+        authenticateJWT,
+        validateParams(IdParamSchema),
+        boardController.get
+    );
+
+    router.post(
+        "/",
+        authenticateJWT,
+        validate(ProfessionSchema),
+        boardController.create
+    );
+
+    router.delete(
+        "/:id",
+        authenticateJWT,
+        validateParams(IdParamSchema),
+        boardController.delete
+    );
+
+    return router
+}
+

@@ -82,14 +82,29 @@ export const projectMembers = mysqlTable("projectMembers", {
 }))
 
 
+export const boardColumns = mysqlTable("boardColumns", {
+    id: int('id').autoincrement().primaryKey(),
+    title: varchar("title", {length: 255}).notNull(),
+    pos: int('pos').notNull().default(0),
+    projectId: int('projectId').notNull(),
+    status: mysqlEnum('status', [Statuses.ACTIVE, Statuses.ARCHIVED]).notNull().default(Statuses.ACTIVE),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+    projectFk: foreignKey({
+        columns: [table.projectId],
+        foreignColumns: [projects.id],
+    }).onDelete("cascade")
+}));
+
 export const tasks = mysqlTable("tasks", {
     id: int('id').autoincrement().primaryKey(),
     title: varchar("title", {length: 255}).notNull(),
     projectId: int('projectId').notNull(),
+    boardColumnId: int('boardColumnId').notNull(),
     status: mysqlEnum('status', [Statuses.PENDING, Statuses.DOING, Statuses.FOR_CHECK, Statuses.FINISHED, Statuses.CANCELED]).notNull().default(Statuses.PENDING),
-
     priority: mysqlEnum('priority', Priorities).notNull().default(Priorities.MEDIUM),
     description: text("description").notNull(),
+    dueDate: timestamp("dueDate").defaultNow(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     projectFk: foreignKey({
