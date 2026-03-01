@@ -70,6 +70,7 @@ export const projectMembers = mysqlTable("projectMembers", {
     id: int('id').autoincrement().primaryKey(),
     projectId: int('projectId').notNull().references(() => projects.id),
     userId: int('userId').notNull().references(() => users.id),
+    userRole: mysqlEnum('role', UserRoles),
 }, (table) => ({
     projectFk: foreignKey({
         columns: [table.projectId],
