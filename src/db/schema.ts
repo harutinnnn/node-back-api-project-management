@@ -100,7 +100,7 @@ export const tasks = mysqlTable("tasks", {
     id: int('id').autoincrement().primaryKey(),
     title: varchar("title", {length: 255}).notNull(),
     projectId: int('projectId').notNull(),
-    boardColumnId: int('boardColumnId').notNull(),
+    columnId: int('columnId').notNull(),
     status: mysqlEnum('status', [Statuses.PENDING, Statuses.DOING, Statuses.FOR_CHECK, Statuses.FINISHED, Statuses.CANCELED]).notNull().default(Statuses.PENDING),
     priority: mysqlEnum('priority', Priorities).notNull().default(Priorities.MEDIUM),
     description: text("description").notNull(),

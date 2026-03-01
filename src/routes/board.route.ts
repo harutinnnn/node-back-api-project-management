@@ -5,7 +5,7 @@ import {authenticateJWT} from "../middlewares/auth";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {ProfessionSchema} from "../schemas/profession.schema";
 import {BoardController} from "../controller/board.controller";
-import {BoardColumnSchema, TaskSchema} from "../schemas/board.column.schema";
+import {BoardColumnSchema, BoardSchema, SortColumnsPayload, TaskSchema} from "../schemas/board.column.schema";
 
 
 export const boardRouter = (context: AppContext) => {
@@ -15,6 +15,13 @@ export const boardRouter = (context: AppContext) => {
 
     const boardController = new BoardController(context);
 
+
+    router.post(
+        "/project",
+        authenticateJWT,
+        validate(BoardSchema),
+        boardController.getBoardData
+    );
 
     router.post(
         "/column",
@@ -30,12 +37,14 @@ export const boardRouter = (context: AppContext) => {
         boardController.createTask
     );
 
-
-    router.get(
-        "/",
+    router.post(
+        "/sort-column",
         authenticateJWT,
-        boardController.index
+        validate(SortColumnsPayload),
+        boardController.sortColumn
     );
+
+
 
     router.get(
         "/:id",
