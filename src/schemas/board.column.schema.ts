@@ -27,6 +27,6 @@ export const TaskSchema = z.object({
 });
 
 export const SortColumnsPayload = z.object({
-    projectId: z.int().optional(),
+    projectId: z.int(),
     columns: z.array(z.number()).optional(),
 });

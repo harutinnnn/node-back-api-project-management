@@ -44,29 +44,6 @@ export const boardRouter = (context: AppContext) => {
         boardController.sortColumn
     );
 
-
-
-    router.get(
-        "/:id",
-        authenticateJWT,
-        validateParams(IdParamSchema),
-        boardController.get
-    );
-
-    router.post(
-        "/",
-        authenticateJWT,
-        validate(ProfessionSchema),
-        boardController.create
-    );
-
-    router.delete(
-        "/:id",
-        authenticateJWT,
-        validateParams(IdParamSchema),
-        boardController.delete
-    );
-
     return router
 }
 
