@@ -22,11 +22,18 @@ export const TaskSchema = z.object({
     description: z.string(),
     priority: z.enum(Priorities),
     assignee: z.int().optional(),
-    dueDate: z.date().optional(),
-    tags: z.array(z.string()),
+    dueDate: z.date().optional()
 });
 
 export const SortColumnsPayload = z.object({
     projectId: z.int(),
     columns: z.array(z.number()).optional(),
+});
+export const DeleteBoardTaskPayload = z.object({
+    taskId: z.int(),
+    columnId: z.int(),
+})
+export const DeleteBoardColPayload = z.object({
+    columnId: z.int(),
+    projectId: z.int(),
 });

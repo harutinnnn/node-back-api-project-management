@@ -5,7 +5,13 @@ import {authenticateJWT} from "../middlewares/auth";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {ProfessionSchema} from "../schemas/profession.schema";
 import {BoardController} from "../controller/board.controller";
-import {BoardColumnSchema, BoardSchema, SortColumnsPayload, TaskSchema} from "../schemas/board.column.schema";
+import {
+    BoardColumnSchema,
+    BoardSchema, DeleteBoardColPayload,
+    DeleteBoardTaskPayload,
+    SortColumnsPayload,
+    TaskSchema
+} from "../schemas/board.column.schema";
 
 
 export const boardRouter = (context: AppContext) => {
@@ -42,6 +48,18 @@ export const boardRouter = (context: AppContext) => {
         authenticateJWT,
         validate(SortColumnsPayload),
         boardController.sortColumn
+    );
+    router.post(
+        "/delete-task",
+        authenticateJWT,
+        validate(DeleteBoardTaskPayload),
+        boardController.deleteTask
+    );
+    router.post(
+        "/delete-column",
+        authenticateJWT,
+        validate(DeleteBoardColPayload),
+        boardController.deleteColumn
     );
 
     return router

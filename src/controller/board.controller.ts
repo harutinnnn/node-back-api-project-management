@@ -1,9 +1,15 @@
 import {Request, Response} from "express";
 import {AppContext} from "../types/app.context.type";
 import {boardColumns, tasks} from "../db/schema";
-import {BoardColumnSchema, BoardSchema, SortColumnsPayload, TaskSchema} from "../schemas/board.column.schema";
+import {
+    BoardColumnSchema,
+    BoardSchema, DeleteBoardColPayload,
+    DeleteBoardTaskPayload,
+    SortColumnsPayload,
+    TaskSchema
+} from "../schemas/board.column.schema";
 import {BoardDataService} from "../services/BoardDataService";
-import {eq, max, sql} from "drizzle-orm";
+import {and, eq, max, sql} from "drizzle-orm";
 
 export class BoardController {
 
@@ -100,6 +106,43 @@ export class BoardController {
             res.status(500).json({error: "Failed to create task"});
         }
     }
+
+    deleteColumn = async (req: Request, res: Response) => {
+        const validatedData = DeleteBoardColPayload.parse(req.body);
+
+        try {
+
+            await this.context.db.delete(boardColumns).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
+
+            res.status(200).json({
+                projectId:validatedData.projectId,
+                columnId: validatedData.projectId,
+            })
+        } catch (err) {
+            console.error(err);
+
+            res.status(500).json({error: "Failed to fetch professions"});
+        }
+    }
+
+    deleteTask = async (req: Request, res: Response) => {
+        const validatedData = DeleteBoardTaskPayload.parse(req.body);
+
+        try {
+
+            await this.context.db.delete(tasks).where(and(eq(tasks.id, validatedData.taskId), eq(tasks.columnId, validatedData.columnId)))
+
+            res.status(200).json({
+                taskId: validatedData.taskId,
+                columnId: validatedData.columnId,
+            })
+        } catch (err) {
+            console.error(err);
+
+            res.status(500).json({error: "Failed to fetch professions"});
+        }
+    }
+
 
     sortColumn = async (req: Request, res: Response) => {
         const validatedData = SortColumnsPayload.parse(req.body);
