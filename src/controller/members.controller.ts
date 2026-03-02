@@ -97,13 +97,12 @@ export class MembersController {
 
             const currentUser = req.user;
 
-            if (currentUser?.role === UserRoles.ADMIN) {
+            if (currentUser?.role === UserRoles.SUPERADMIN) {
 
 
                 const [user] = await this.context.db.select().from(users).where(eq(users.email, validatedData.email));
 
                 if (!user) {
-
 
                     const pass = generatePassword(8);
                     const hashedPassword = await bcrypt.hash(pass, 10);
@@ -114,7 +113,7 @@ export class MembersController {
                         phone: validatedData.phone,
                         gender: validatedData.gender,
                         companyId: req.user?.companyId,
-                        professionId: validatedData.professionId,
+                        professionId: validatedData?.professionId || null,
                         role: UserRoles.USER,
                         password: hashedPassword,
                         status: Statuses.PUBLISHED

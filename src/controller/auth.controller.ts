@@ -57,7 +57,7 @@ export class AuthController {
                     gender: validatedData.gender,
                     phone: validatedData.phone,
                     password: hashedPassword,
-                    role: UserRoles.ADMIN,
+                    role: UserRoles.SUPERADMIN,
                     status: Statuses.NOT_ACTIVATED,
                     activationToken: activationHash,
                 });

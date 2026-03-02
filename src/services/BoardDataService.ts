@@ -1,5 +1,5 @@
 import {AppContext} from "../types/app.context.type";
-import {boardColumns, projects, tasks} from "../db/schema";
+import {boardColumns, projects, taskMembers, tasks} from "../db/schema";
 import {and, asc, eq, inArray, sql} from "drizzle-orm";
 import {BoardDataType, ColumnInnerTaskIds, ColumnInnerTaskIdsQuery, ColumnType} from "../types/board.data.type";
 
@@ -37,7 +37,15 @@ export class BoardDataService {
                     let tasksData: any[] = [];
 
                     if (columnIds.length) {
-                        tasksData = await this.context.db.select().from(tasks).where(inArray(tasks.columnId, columnIds)).orderBy(asc(tasks.pos));
+                        tasksData = await this.context.db
+                            .select({
+                                ...tasks,
+                                assignee: taskMembers.userId
+                            })
+                            .from(tasks)
+                            .leftJoin(taskMembers, eq(tasks.id, taskMembers.taskId))
+                            .where(inArray(tasks.columnId, columnIds))
+                            .orderBy(asc(tasks.pos));
 
                         boardDataType.tasks = tasksData;
 

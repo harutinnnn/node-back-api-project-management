@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import {AppContext} from "../types/app.context.type";
-import {boardColumns, tasks} from "../db/schema";
+import {boardColumns, notifications, taskMembers, tasks} from "../db/schema";
 import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
@@ -11,6 +11,7 @@ import {
 import {BoardDataService} from "../services/BoardDataService";
 import {and, eq, max, sql} from "drizzle-orm";
 import {TaskType} from "../types/board.data.type";
+import {NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 
 export class BoardController {
 
@@ -85,7 +86,7 @@ export class BoardController {
 
             if (req.user?.companyId) {
 
-                const result = await this.context.db.insert(tasks).values({
+                const [result] = await this.context.db.insert(tasks).values({
                     projectId: validatedData.projectId,
                     columnId: validatedData?.columnId,
                     title: validatedData.title,
@@ -95,8 +96,23 @@ export class BoardController {
                     dueDate: validatedData?.dueDate,
                 }).$returningId();
 
+                if (validatedData.assignee) {
+
+                    await this.context.db.insert(taskMembers).values({
+                        taskId: result.id,
+                        userId: Number(validatedData.assignee)
+                    });
+
+                    await this.context.db.insert(notifications).values({
+                        userId: Number(validatedData.assignee),
+                        types: NotificationTypesEnum.TASK,
+                        message: "A new task has been assigned to you. (validatedData.title)",
+                        objectId: result.id
+                    });
+                }
+
                 return res.json({
-                    id: result[0].id,
+                    id: result.id,
                     title: validatedData.title,
                 });
 
@@ -188,7 +204,6 @@ export class BoardController {
         }
     }
 
-
     sortColumn = async (req: Request, res: Response) => {
         const validatedData = SortColumnsPayload.parse(req.body);
 
@@ -208,7 +223,6 @@ export class BoardController {
 
     sortTasks = async (req: Request, res: Response) => {
         const validatedData = SortTasksPayload.parse(req.body);
-
 
         try {
 

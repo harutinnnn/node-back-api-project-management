@@ -8,12 +8,13 @@ import {
     text,
     foreignKey,
     mysqlEnum,
-    float
+    float, tinyint
 } from "drizzle-orm/mysql-core";
 import {UserRoles} from "../enums/UserRoles";
 import {Gender} from "../enums/Gender";
 import {Statuses} from "../enums/Statuses";
 import {Priorities} from "../enums/Priorities";
+import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 
 export const company = mysqlTable("company", {
     id: int('id').autoincrement().primaryKey(),
@@ -35,7 +36,7 @@ export const users = mysqlTable("users", {
     refreshToken: varchar("refresh_token", {length: 255}),
     avatar: varchar("avatar", {length: 255}),
     gender: mysqlEnum('gender', [Gender.MALE, Gender.FEMALE, Gender.UNKNOWN]).notNull().default(Gender.UNKNOWN),
-    role: mysqlEnum('role', [UserRoles.ADMIN, UserRoles.USER]).notNull().default(UserRoles.USER),
+    role: mysqlEnum('role', [UserRoles.SUPERADMIN, UserRoles.ADMIN, UserRoles.USER]).notNull().default(UserRoles.USER),
     status: mysqlEnum('status', [Statuses.PENDING, Statuses.PUBLISHED, Statuses.BLOCKED, Statuses.NOT_ACTIVATED]).notNull().default(Statuses.NOT_ACTIVATED),
     activationToken: varchar('activationToken', {length: 255}),
     createdAt: timestamp("created_at").defaultNow(),
@@ -133,6 +134,10 @@ export const taskMembers = mysqlTable("taskMembers", {
     taskId: int('taskId').notNull().references(() => tasks.id),
     userId: int('userId').notNull().references(() => users.id),
 }, (table) => ({
+    uniqueCompanySkill: unique("skills_company_name_unique").on(
+        table.taskId,
+        table.userId
+    ),
     taskFk: foreignKey({
         columns: [table.taskId],
         foreignColumns: [tasks.id],
@@ -191,6 +196,29 @@ export const professions = mysqlTable("professions", {
         table.name,
         table.companyId
     ),
+}));
+
+
+export const notifications = mysqlTable("notifications", {
+    id: int('id').autoincrement().primaryKey(),
+    userId: int('userId').notNull(),
+    types: mysqlEnum('types', NotificationTypesEnum).notNull(),
+    actionTypes: mysqlEnum('actionTypes', NotificationActionTypesEnum).notNull(),
+    message: varchar('message', {length: 255}).notNull(),
+    objectId: int('objectId'),
+    isRead: tinyint('isRead').notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+    uniqueNotification: unique("notifications_unique").on(
+        table.userId,
+        table.objectId,
+        table.types,
+        table.actionTypes
+    ),
+    usersFk: foreignKey({
+        columns: [table.userId],
+        foreignColumns: [users.id],
+    }).onDelete("cascade"),
 }));
 
 
