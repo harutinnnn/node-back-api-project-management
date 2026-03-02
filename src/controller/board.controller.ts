@@ -209,6 +209,7 @@ export class BoardController {
 
             await this.context.db.delete(tasks).where(and(eq(tasks.id, validatedData.taskId), eq(tasks.columnId, validatedData.columnId)))
 
+
             res.status(200).json({
                 taskId: validatedData.taskId,
                 columnId: validatedData.columnId,
