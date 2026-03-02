@@ -11,7 +11,7 @@ import {
 import {BoardDataService} from "../services/BoardDataService";
 import {and, eq, max, sql} from "drizzle-orm";
 import {TaskType} from "../types/board.data.type";
-import {NotificationTypesEnum} from "../enums/NotificationTypesEnum";
+import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 
 export class BoardController {
 
@@ -92,7 +92,6 @@ export class BoardController {
                     title: validatedData.title,
                     description: validatedData.description,
                     priority: validatedData.priority,
-                    assignee: validatedData?.assignee,
                     dueDate: validatedData?.dueDate,
                 }).$returningId();
 
@@ -106,7 +105,8 @@ export class BoardController {
                     await this.context.db.insert(notifications).values({
                         userId: Number(validatedData.assignee),
                         types: NotificationTypesEnum.TASK,
-                        message: "A new task has been assigned to you. (validatedData.title)",
+                        actionTypes:NotificationActionTypesEnum.CREATE,
+                        message: `A new task has been assigned to you. (${validatedData.title})`,
                         objectId: result.id
                     });
                 }
@@ -152,6 +152,22 @@ export class BoardController {
                         eq(tasks.columnId, validatedData.columnId),
                     )
                 );
+
+                if (validatedData.assignee) {
+
+                    await this.context.db.insert(taskMembers).values({
+                        taskId: validatedData.id,
+                        userId: Number(validatedData.assignee)
+                    });
+
+                    await this.context.db.insert(notifications).values({
+                        userId: Number(validatedData.assignee),
+                        types: NotificationTypesEnum.TASK,
+                        actionTypes:NotificationActionTypesEnum.UPDATE,
+                        message: `Task (${validatedData.title}) has been changed`,
+                        objectId: validatedData.id
+                    });
+                }
 
                 return res.json(taskData);
 

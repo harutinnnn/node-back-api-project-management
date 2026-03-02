@@ -1,7 +1,8 @@
 import {NextFunction, Request, Response} from "express";
 import {notifications} from "../db/schema";
-import {and, eq, inArray} from "drizzle-orm";
+import {and, eq} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
+import {IdParamSchema} from "../schemas/notificationsSchema";
 
 export class NotificationController {
 
@@ -24,9 +25,7 @@ export class NotificationController {
                         )
                     );
 
-                res.json({
-                    notifications: notificationsData
-                });
+                res.json(notificationsData);
 
             } else {
                 res.json({});
@@ -36,6 +35,36 @@ export class NotificationController {
             console.log(error)
             res.status(500).json({error: "Failed to fetch notifications"});
         }
+    }
 
+    update = async (req: Request, res: Response, next: NextFunction) => {
+
+
+        const validatedData = IdParamSchema.parse(req.body);
+
+        try {
+
+            if (validatedData.id && req.user?.id) {
+
+                await this.context.db.update(notifications).set({isRead: 1}).where(
+                    and(
+                        eq(notifications.userId, Number(req.user?.id)),
+                        eq(notifications.id, validatedData.id)
+                    )
+                )
+                res.json({
+                    id: validatedData.id,
+                });
+            } else {
+                res.json({
+                    id: 0,
+                });
+            }
+
+
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({error: "Failed to fetch notifications"});
+        }
     }
 }
