@@ -136,10 +136,15 @@ export class BoardDataService {
 
     }
 
-    sortBoardColumnTasks = async (projectId: number, columns: {
-        columnId: number,
-        taskIds: number[]
-    }[]): Promise<void> => {
+    sortBoardColumnTasks = async (
+        projectId: number,
+        columns: {
+            columnId: number,
+            taskIds: number[],
+        }[],
+        draggedTaskId: number | undefined
+    ): Promise<void> => {
+
 
         try {
 
@@ -156,6 +161,11 @@ export class BoardDataService {
             })
 
             await Promise.all(colTasksSort)
+
+
+            if (draggedTaskId) {
+                //TODO set notification to connected users
+            }
 
         } catch (err) {
 

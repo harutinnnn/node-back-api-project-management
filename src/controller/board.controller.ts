@@ -209,9 +209,10 @@ export class BoardController {
     sortTasks = async (req: Request, res: Response) => {
         const validatedData = SortTasksPayload.parse(req.body);
 
+
         try {
 
-            await this.boardDataService.sortBoardColumnTasks(validatedData.projectId, validatedData.columns || [])
+            await this.boardDataService.sortBoardColumnTasks(validatedData.projectId, validatedData.columns || [], Number(validatedData?.draggedTaskId))
 
             res.status(200).json({})
         } catch (err) {

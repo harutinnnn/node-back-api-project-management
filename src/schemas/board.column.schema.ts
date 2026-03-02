@@ -43,6 +43,7 @@ export const SortColumnsPayload = z.object({
 
 
 export const SortTasksPayload = z.object({
+    draggedTaskId: z.int().optional(),
     projectId: z.int(),
     columns: z.array(
         z.object({
