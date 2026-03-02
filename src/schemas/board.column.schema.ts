@@ -25,6 +25,17 @@ export const TaskSchema = z.object({
     dueDate: z.date().optional()
 });
 
+export const TaskUpdateSchema = z.object({
+    id: z.int(),
+    title: z.string(),
+    projectId: z.int(),
+    columnId: z.int(),
+    description: z.string(),
+    priority: z.enum(Priorities),
+    assignee: z.int().optional(),
+    dueDate: z.date().or(z.string()).optional()
+});
+
 export const SortColumnsPayload = z.object({
     projectId: z.int(),
     columns: z.array(z.number()).optional(),

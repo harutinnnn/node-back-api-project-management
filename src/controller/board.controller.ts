@@ -6,10 +6,11 @@ import {
     BoardSchema, DeleteBoardColPayload,
     DeleteBoardTaskPayload,
     SortColumnsPayload,
-    TaskSchema
+    TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
 import {BoardDataService} from "../services/BoardDataService";
 import {and, eq, max, sql} from "drizzle-orm";
+import {TaskType} from "../types/board.data.type";
 
 export class BoardController {
 
@@ -43,7 +44,11 @@ export class BoardController {
 
             if (req.user?.companyId) {
 
-                const [maxPos] = await this.context.db.select({pos:sql<number>`max(${boardColumns.pos})`}).from(boardColumns).where(eq(boardColumns.projectId, validatedData.projectId))
+                const [maxPos] = await this.context.db.select({
+                    pos: sql<number>`max(
+                    ${boardColumns.pos}
+                    )`
+                }).from(boardColumns).where(eq(boardColumns.projectId, validatedData.projectId))
                 console.log(maxPos)
 
                 const result = await this.context.db.insert(boardColumns).values({
@@ -55,7 +60,7 @@ export class BoardController {
                 return res.json({
                     id: result[0].id,
                     title: validatedData.title,
-                    pos:maxPos?.pos || 0
+                    pos: maxPos?.pos || 0
                 });
 
             } else {
@@ -107,6 +112,45 @@ export class BoardController {
         }
     }
 
+    updateTask = async (req: Request, res: Response) => {
+
+        const validatedData = TaskUpdateSchema.parse(req.body);
+
+        try {
+
+            if (req.user?.companyId) {
+
+                const taskData: Omit<TaskType, "id" | "createdAt" | "status"> = {
+                    projectId: Number(validatedData.projectId),
+                    columnId: validatedData?.columnId,
+                    title: validatedData.title,
+                    description: validatedData.description,
+                    priority: validatedData.priority,
+                }
+
+                const result = await this.context.db.update(tasks).set(taskData).where(
+                    and(
+                        eq(tasks.projectId, validatedData.projectId),
+                        eq(tasks.id, validatedData.id),
+                        eq(tasks.columnId, validatedData.columnId),
+                    )
+                );
+
+                return res.json(taskData);
+
+            } else {
+                return res.status(500).json({error: "Failed to create profession"});
+            }
+
+        } catch (error) {
+            console.log(error)
+            if (error instanceof Error) {
+                console.error('Error: ' + error.message);
+            }
+            res.status(500).json({error: "Failed to create task"});
+        }
+    }
+
     deleteColumn = async (req: Request, res: Response) => {
         const validatedData = DeleteBoardColPayload.parse(req.body);
 
@@ -115,7 +159,7 @@ export class BoardController {
             await this.context.db.delete(boardColumns).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
 
             res.status(200).json({
-                projectId:validatedData.projectId,
+                projectId: validatedData.projectId,
                 columnId: validatedData.projectId,
             })
         } catch (err) {

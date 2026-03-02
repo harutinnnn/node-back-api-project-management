@@ -10,7 +10,7 @@ import {
     BoardSchema, DeleteBoardColPayload,
     DeleteBoardTaskPayload,
     SortColumnsPayload,
-    TaskSchema
+    TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
 
 
@@ -41,6 +41,13 @@ export const boardRouter = (context: AppContext) => {
         authenticateJWT,
         validate(TaskSchema),
         boardController.createTask
+    );
+
+    router.put(
+        "/task",
+        authenticateJWT,
+        validate(TaskUpdateSchema),
+        boardController.updateTask
     );
 
     router.post(

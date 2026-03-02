@@ -36,7 +36,8 @@ export type TaskType = {
     columnId: number
     status: Statuses.PENDING | Statuses.DOING | Statuses.FOR_CHECK | Statuses.FINISHED | Statuses.CANCELED
     priority: Priorities,
+    assignee?: number | null,
     description: string,
-    dueDate: Date | string
+    dueDate?: Date | string | null
     createdAt: Date | string
 }
