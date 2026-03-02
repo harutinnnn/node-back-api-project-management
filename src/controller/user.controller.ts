@@ -9,12 +9,15 @@ export class UserController {
     constructor(private context: AppContext) {
     }
 
-
+    /**
+     * @param req
+     * @param res
+     */
     index = async (req: Request, res: Response) => {
 
         try {
-            const allUsers = await db.select().from(users);
-            res.json(allUsers);
+            // const allUsers = await db.select().from(users);
+            res.json([]);
         } catch (error) {
             res.status(500).json({error: "Failed to fetch users"});
         }

@@ -10,7 +10,11 @@ export class TaskController {
     constructor(private context: AppContext) {
     }
 
-
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
@@ -19,26 +23,15 @@ export class TaskController {
         } catch (error) {
             res.status(500).json({error: "Failed to fetch users"});
         }
-
     }
 
+    /**
+     * @param req
+     * @param res
+     */
     create = async (req: Request, res: Response) => {
 
-
-        console.log(req.files);
-        console.log(req.body);
-
-        // const validatedData = TaskSchema.parse(req.body);
-
-        //todo handle files
-
-        // console.log(validatedData);
-
-
         try {
-
-
-
             res.json({});
         } catch (error) {
             if (error instanceof Error) {
@@ -48,19 +41,19 @@ export class TaskController {
         }
     }
 
-
+    /**
+     * @param req
+     * @param res
+     */
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.body);
 
         try {
+
             await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))
-
-            console.log('validatedData.id', validatedData.id)
             res.json({});
-
         } catch (error) {
-
             if (error instanceof Error) {
                 console.error('Error: ' + error.message);
             }

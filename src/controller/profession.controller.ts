@@ -11,12 +11,15 @@ export class ProfessionController {
     constructor(private context: AppContext) {
     }
 
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
             if (req.user?.companyId) {
-
-
                 const result = await this.context.db.select().from(professions).where(eq(professions.companyId, req.user?.companyId));
                 res.json(result);
 
@@ -27,10 +30,13 @@ export class ProfessionController {
         } catch (error) {
             res.status(500).json({error: "Failed to fetch professions"});
         }
-
     }
 
-
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     get = async (req: Request, res: Response, next: NextFunction) => {
 
         const {id} = IdParamSchema.parse(req.params);
@@ -58,14 +64,11 @@ export class ProfessionController {
      */
     create = async (req: Request, res: Response) => {
 
-
         const validatedData = ProfessionSchema.parse(req.body);
-        console.log('validatedData', validatedData)
 
         try {
 
             if (req.user?.companyId) {
-
 
                 if (validatedData.id) {
 
@@ -74,7 +77,6 @@ export class ProfessionController {
                     const [profession] = await this.context.db.select().from(professions).where(and(eq(professions.companyId, req.user.companyId), eq(professions.name, validatedData.name), ne(professions.id, validatedData.id)));
 
                     if (!profession) {
-
 
                         await this.context.db.update(professions).set({name}).where(and(eq(professions.companyId, req.user?.companyId), eq(professions.id, validatedData.id)));
 
@@ -110,7 +112,6 @@ export class ProfessionController {
                     }
 
                 }
-
             } else {
                 return res.status(500).json({error: "Failed to create profession"});
             }
@@ -124,7 +125,10 @@ export class ProfessionController {
         }
     }
 
-
+    /**
+     * @param req
+     * @param res
+     */
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.params);

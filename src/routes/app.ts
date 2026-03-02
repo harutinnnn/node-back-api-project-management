@@ -17,7 +17,6 @@ export const createApp = (context: AppContext) => {
 
     const app = express();
 
-
     app.use(cors());
     app.use(express.json());
     app.use(passport.initialize());
@@ -32,7 +31,6 @@ export const createApp = (context: AppContext) => {
     app.use('/profession', professionRouter(context));
     app.use('/board', boardRouter(context));
     app.use('/notifications', notificationRouter(context));
-
 
     return app;
 }

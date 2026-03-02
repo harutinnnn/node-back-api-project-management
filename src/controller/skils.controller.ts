@@ -12,26 +12,32 @@ export class SkillsController {
     constructor(private context: AppContext) {
     }
 
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
             if (req.user?.companyId) {
 
-
                 const result = await this.context.db.select().from(skills).where(eq(skills.companyId, req.user?.companyId));
                 res.json(result);
-
             } else {
                 res.json([]);
             }
-
         } catch (error) {
             res.status(500).json({error: "Failed to fetch skills"});
         }
 
     }
 
-
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     get = async (req: Request, res: Response, next: NextFunction) => {
 
         const {id} = IdParamSchema.parse(req.params);
@@ -59,37 +65,34 @@ export class SkillsController {
      */
     create = async (req: Request, res: Response) => {
 
-
         const validatedData = SkillsSchema.parse(req.body);
 
         try {
 
             if (req.user?.companyId) {
 
-
                 if (validatedData.id) {
 
+                    //TODO allow update if user role id admin|superadmin
                     const name = validatedData.name;
 
                     const [skill] = await this.context.db.select().from(skills).where(and(eq(skills.companyId, req.user.companyId), eq(skills.name, validatedData.name), ne(skills.id, validatedData.id)));
 
                     if (!skill) {
 
-
                         await this.context.db.update(skills).set({name}).where(and(eq(skills.companyId, req.user?.companyId), eq(skills.id, validatedData.id)));
 
                         return res.json({
                             id: validatedData.id,
                         });
-
                     } else {
                         return res.status(201).json({
                             error: "Skill already exists",
                         });
                     }
-
                 } else {
 
+                    //TODO allow create if user role id admin|superadmin
                     const [skill] = await this.context.db.select().from(skills).where(and(eq(skills.companyId, req.user.companyId), eq(skills.name, validatedData.name)));
 
                     if (!skill) {
@@ -102,15 +105,12 @@ export class SkillsController {
                         return res.json({
                             id: result[0].id,
                         });
-
                     } else {
                         return res.status(201).json({
                             error: "Skill already exists",
                         });
                     }
-
                 }
-
             } else {
                 return res.status(500).json({error: "Failed to create skill"});
             }
@@ -125,12 +125,17 @@ export class SkillsController {
     }
 
 
+    /**
+     * @param req
+     * @param res
+     */
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.params);
 
         try {
             if (req.user?.companyId) {
+                //TODO allow delete if user role id admin|superadmin
                 await this.context.db.delete(skills).where(and(eq(skills.id, validatedData.id), eq(skills.companyId, req.user.companyId)));
                 res.json({id: validatedData.id});
 

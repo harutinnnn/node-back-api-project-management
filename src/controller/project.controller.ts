@@ -12,6 +12,11 @@ export class ProjectController {
     constructor(private context: AppContext) {
     }
 
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
@@ -28,10 +33,13 @@ export class ProjectController {
         } catch (error) {
             res.status(500).json({error: "Failed to fetch projects"});
         }
-
     }
 
-
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     get = async (req: Request, res: Response, next: NextFunction) => {
 
         const {id} = IdParamSchema.parse(req.params);
@@ -52,12 +60,17 @@ export class ProjectController {
 
     }
 
+    /**
+     * @param req
+     * @param res
+     */
     create = async (req: Request, res: Response) => {
 
         const validatedData = ProjectSchema.parse(req.body);
 
         try {
 
+            //TODO check id user role manager|admin|superadmin
             if (req.user?.companyId) {
 
                 if (validatedData.id) {
@@ -112,19 +125,15 @@ export class ProjectController {
                         return res.json({
                             id: result[0].id,
                         });
-
                     } else {
                         return res.status(201).json({
                             error: "Project already exists",
                         });
                     }
-
                 }
-
             } else {
                 return res.status(500).json({error: "Failed to create project"});
             }
-
         } catch (error) {
             console.log(error)
             if (error instanceof Error) {
@@ -135,13 +144,18 @@ export class ProjectController {
         }
     }
 
-
+    /**
+     * @param req
+     * @param res
+     */
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.params);
 
         try {
             if (req.user?.companyId) {
+
+                //TODO check id user role manager|admin|superadmin and some checks too
                 await this.context.db.delete(projects).where(and(eq(projects.id, validatedData.id), eq(projects.companyId, req.user.companyId)));
                 res.json({id: validatedData.id});
 

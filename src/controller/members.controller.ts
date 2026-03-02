@@ -22,6 +22,11 @@ export class MembersController {
     }
 
 
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     index = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
@@ -59,7 +64,11 @@ export class MembersController {
 
     }
 
-
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
     get = async (req: Request, res: Response, next: NextFunction) => {
 
         const {id} = IdParamSchema.parse(req.params);
@@ -81,7 +90,6 @@ export class MembersController {
         } catch (error) {
             res.status(500).json({error: "Failed to fetch users"});
         }
-
     }
 
     /**
@@ -91,7 +99,6 @@ export class MembersController {
     create = async (req: Request, res: Response) => {
 
         const validatedData = MemberSchema.parse(req.body);
-
 
         try {
 
@@ -151,10 +158,13 @@ export class MembersController {
         }
     }
 
+    /**
+     * @param req
+     * @param res
+     */
     avatar = async (req: Request, res: Response) => {
 
         const avatarFolderPath = path.join(__dirname, '../../uploads/members');
-
 
         try {
 
@@ -196,11 +206,13 @@ export class MembersController {
             }
         } catch (err) {
             console.log(err)
-
         }
-
     }
 
+    /**
+     * @param req
+     * @param res
+     */
     delete = async (req: Request, res: Response) => {
 
         const validatedData = IdParamSchema.parse(req.body);
@@ -224,5 +236,4 @@ export class MembersController {
             res.status(500).json({error: "Failed to create project"});
         }
     }
-
 }
