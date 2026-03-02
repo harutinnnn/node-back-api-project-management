@@ -1,16 +1,13 @@
 import {NextFunction, Request, Response} from "express";
-import {memberSkills, notifications, skills, users} from "../db/schema";
+import {notifications} from "../db/schema";
 import {and, eq, inArray} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
-import {UserType} from "../types/user.type";
-import {SkillType} from "../types/skill.type";
 
 export class NotificationController {
 
 
     constructor(private context: AppContext) {
     }
-
 
     index = async (req: Request, res: Response, next: NextFunction) => {
 
