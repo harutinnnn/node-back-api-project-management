@@ -37,7 +37,7 @@ export class BoardDataService {
                     let tasksData: any[] = [];
 
                     if (columnIds.length) {
-                        tasksData = await this.context.db.select().from(tasks).where(inArray(tasks.columnId, columnIds));
+                        tasksData = await this.context.db.select().from(tasks).where(inArray(tasks.columnId, columnIds)).orderBy(asc(tasks.pos));
 
                         boardDataType.tasks = tasksData;
 
@@ -122,6 +122,40 @@ export class BoardDataService {
 
             return parsedColumns;
 
+
+        } catch (err) {
+
+            if (err instanceof Error) {
+                throw new Error(err.message)
+            } else {
+                throw new Error("Unknown error")
+            }
+
+        }
+
+
+    }
+
+    sortBoardColumnTasks = async (projectId: number, columns: {
+        columnId: number,
+        taskIds: number[]
+    }[]): Promise<void> => {
+
+        try {
+
+            const colTasksSort = columns.map(async (column) => {
+
+                column.taskIds.map(async (taskId, index) => {
+
+                    const pos = index + 1;
+                    return await this.context.db.update(tasks).set({
+                        pos: pos,
+                        columnId: Number(column.columnId)
+                    }).where(eq(tasks.id, taskId));
+                })
+            })
+
+            await Promise.all(colTasksSort)
 
         } catch (err) {
 

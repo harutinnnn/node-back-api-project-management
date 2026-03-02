@@ -106,6 +106,7 @@ export const tasks = mysqlTable("tasks", {
     priority: mysqlEnum('priority', Priorities).notNull().default(Priorities.MEDIUM),
     description: text("description").notNull(),
     dueDate: timestamp("dueDate").defaultNow(),
+    pos: int('pos').notNull().default(0),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     projectFk: foreignKey({

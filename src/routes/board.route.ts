@@ -9,7 +9,7 @@ import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
     DeleteBoardTaskPayload,
-    SortColumnsPayload,
+    SortColumnsPayload, SortTasksPayload,
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
 
@@ -56,6 +56,14 @@ export const boardRouter = (context: AppContext) => {
         validate(SortColumnsPayload),
         boardController.sortColumn
     );
+
+    router.post(
+        "/sort-tasks",
+        authenticateJWT,
+        validate(SortTasksPayload),
+        boardController.sortTasks
+    );
+
     router.post(
         "/delete-task",
         authenticateJWT,

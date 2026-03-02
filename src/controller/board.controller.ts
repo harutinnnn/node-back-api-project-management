@@ -5,7 +5,7 @@ import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
     DeleteBoardTaskPayload,
-    SortColumnsPayload,
+    SortColumnsPayload, SortTasksPayload,
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
 import {BoardDataService} from "../services/BoardDataService";
@@ -55,6 +55,7 @@ export class BoardController {
                     title: validatedData.title,
                     companyId: req.user?.companyId,
                     projectId: validatedData.projectId,
+                    pos: maxPos?.pos || 0,
                 }).$returningId();
 
                 return res.json({
@@ -198,6 +199,21 @@ export class BoardController {
             res.status(200).json({
                 columns: columns
             })
+        } catch (err) {
+            console.error(err);
+
+            res.status(500).json({error: "Failed to fetch professions"});
+        }
+    }
+
+    sortTasks = async (req: Request, res: Response) => {
+        const validatedData = SortTasksPayload.parse(req.body);
+
+        try {
+
+            await this.boardDataService.sortBoardColumnTasks(validatedData.projectId, validatedData.columns || [])
+
+            res.status(200).json({})
         } catch (err) {
             console.error(err);
 

@@ -40,10 +40,24 @@ export const SortColumnsPayload = z.object({
     projectId: z.int(),
     columns: z.array(z.number()).optional(),
 });
+
+
+export const SortTasksPayload = z.object({
+    projectId: z.int(),
+    columns: z.array(
+        z.object({
+            columnId: z.int(),
+            taskIds: z.array(z.number()),
+        })
+    ),
+});
+
+
 export const DeleteBoardTaskPayload = z.object({
     taskId: z.int(),
     columnId: z.int(),
 })
+
 export const DeleteBoardColPayload = z.object({
     columnId: z.int(),
     projectId: z.int(),
