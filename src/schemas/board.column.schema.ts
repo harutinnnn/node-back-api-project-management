@@ -32,7 +32,7 @@ export const TaskUpdateSchema = z.object({
     columnId: z.int(),
     description: z.string(),
     priority: z.enum(Priorities),
-    assignee: z.int().optional(),
+    assignee: z.array(z.int()).optional(),
     dueDate: z.date().or(z.string()).optional()
 });
 

@@ -44,10 +44,16 @@ export class BoardDataService {
                         tasksData = await this.context.db
                             .select({
                                 ...tasks,
-                                assignee: taskMembers.userId
+                                assignee: sql<string>`GROUP_CONCAT
+                                (
+                                ${taskMembers.userId}
+                                SEPARATOR
+                                ','
+                                )`
                             })
                             .from(tasks)
                             .leftJoin(taskMembers, eq(tasks.id, taskMembers.taskId))
+                            .groupBy(tasks.id)
                             .where(inArray(tasks.columnId, columnIds))
                             .orderBy(asc(tasks.pos));
 
@@ -64,6 +70,16 @@ export class BoardDataService {
                             columnInnerTaskIds.push(colTmpData);
                         })
                         boardDataType.columns = columnInnerTaskIds;
+
+
+                        tasksData.map(task => {
+                            console.log(task.assignee)
+                            if (typeof task.assignee === "string") {
+                                task.assignee = task.assignee.split(',').map((assignee: any) => Number(assignee));
+                            } else {
+                                task.assignee = [];
+                            }
+                        })
                     }
 
                     return {

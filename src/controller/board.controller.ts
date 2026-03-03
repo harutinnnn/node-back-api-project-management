@@ -156,34 +156,49 @@ export class BoardController {
                         )
                     );
 
-                    if (validatedData.assignee) {
+                    if (validatedData.assignee?.length) {
+
 
                         await trx.delete(taskMembers).where(
                             eq(taskMembers.taskId, validatedData.id)
                         )
 
-                        await trx.insert(taskMembers).values({
-                            taskId: validatedData.id,
-                            userId: Number(validatedData.assignee)
-                        });
+                        const addMembers = validatedData.assignee.map(async (assignee: any) => {
+
+
+                            return await trx.insert(taskMembers).values({
+                                taskId: validatedData.id,
+                                userId: Number(assignee)
+                            });
+                        })
+
+                        await Promise.all(addMembers)
+
 
 
                         await trx.delete(notifications).where(
                             and(
-                                eq(notifications.userId, Number(validatedData.assignee)),
                                 eq(notifications.objectId, validatedData.id),
                                 eq(notifications.types, NotificationTypesEnum.TASK),
                                 eq(notifications.actionTypes, NotificationActionTypesEnum.UPDATE),
                             )
                         )
 
-                        await trx.insert(notifications).values({
-                            userId: Number(validatedData.assignee),
-                            types: NotificationTypesEnum.TASK,
-                            actionTypes: NotificationActionTypesEnum.UPDATE,
-                            message: `Task (${validatedData.title}) has been changed`,
-                            objectId: validatedData.id
-                        });
+                        const addNotifications = validatedData.assignee.map(async (assignee: any) => {
+
+
+                            return await trx.insert(notifications).values({
+                                userId: Number(assignee),
+                                types: NotificationTypesEnum.TASK,
+                                actionTypes: NotificationActionTypesEnum.UPDATE,
+                                message: `Task (${validatedData.title}) has been changed`,
+                                objectId: validatedData.id
+                            });
+                        })
+
+                        await Promise.all(addNotifications)
+
+
                     }
 
                     return res.json(taskData);
