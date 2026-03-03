@@ -208,7 +208,7 @@ export class BoardController {
         try {
 
             // await this.context.db.delete(boardColumns).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
-            await this.context.db.update(boardColumns).set({status:Statuses.ARCHIVED}).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
+            await this.context.db.update(boardColumns).set({status: Statuses.ARCHIVED}).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
 
             res.status(200).json({
                 projectId: validatedData.projectId,
@@ -262,7 +262,7 @@ export class BoardController {
 
         try {
 
-            await this.boardDataService.sortBoardColumnTasks(validatedData.projectId, validatedData.columns || [], Number(validatedData?.draggedTaskId))
+            await this.boardDataService.sortBoardColumnTasks(validatedData.columns || [], Number(validatedData?.draggedTaskId))
 
             res.status(200).json({})
         } catch (err) {

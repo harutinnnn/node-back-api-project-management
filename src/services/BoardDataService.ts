@@ -149,7 +149,6 @@ export class BoardDataService {
     }
 
     sortBoardColumnTasks = async (
-        projectId: number,
         columns: {
             columnId: number,
             taskIds: number[],
