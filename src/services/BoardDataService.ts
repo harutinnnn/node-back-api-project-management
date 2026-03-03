@@ -132,7 +132,9 @@ export class BoardDataService {
                 .leftJoin(tasks, eq(boardColumns.id, tasks.columnId))
                 .orderBy(asc(boardColumns.pos))
                 .groupBy(boardColumns.id)
-                .where(eq(boardColumns.projectId, projectId));
+                .where(and(eq(boardColumns.projectId, projectId),eq(boardColumns.status, Statuses.ACTIVE)));
+
+            console.log(columnsResult)
 
 
             const parsedColumns: ColumnInnerTaskIds[] = [];
