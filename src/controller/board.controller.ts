@@ -45,7 +45,7 @@ export class BoardController {
                 .innerJoin(boardColumns, eq(tasks.columnId, boardColumns.id))
                 .innerJoin(projects, eq(boardColumns.projectId, projects.id))
                 .leftJoin(taskMembers, eq(tasks.id, taskMembers.taskId))
-                .leftJoin(users,eq(taskMembers.userId,users.id))
+                .leftJoin(users, eq(taskMembers.userId, users.id))
                 .where(and(
                     eq(boardColumns.status, Statuses.ACTIVE),
                     eq(projects.companyId, Number(req.user?.companyId))
@@ -124,6 +124,7 @@ export class BoardController {
 
             if (req.user?.companyId) {
 
+
                 const [result] = await this.context.db.insert(tasks).values({
                     projectId: validatedData.projectId,
                     columnId: validatedData?.columnId,
@@ -140,6 +141,7 @@ export class BoardController {
                         userId: Number(validatedData.assignee)
                     });
 
+
                     await this.context.db.insert(notifications).values({
                         userId: Number(validatedData.assignee),
                         types: NotificationTypesEnum.TASK,
@@ -149,10 +151,19 @@ export class BoardController {
                     });
                 }
 
-                return res.json({
+                const taskData = {
                     id: result.id,
+                    projectId: validatedData.projectId,
+                    columnId: validatedData?.columnId,
                     title: validatedData.title,
-                });
+                    description: validatedData?.description || "",
+                    priority: validatedData?.priority || Priorities.MEDIUM,
+                    dueDate: validatedData?.dueDate || null,
+                    assignee:[]
+                }
+
+
+                return res.json(taskData);
 
             } else {
                 return res.status(500).json({error: "Failed to create profession"});
