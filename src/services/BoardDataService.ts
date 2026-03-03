@@ -134,8 +134,6 @@ export class BoardDataService {
                 .groupBy(boardColumns.id)
                 .where(and(eq(boardColumns.projectId, projectId),eq(boardColumns.status, Statuses.ACTIVE)));
 
-            console.log(columnsResult)
-
 
             const parsedColumns: ColumnInnerTaskIds[] = [];
 
