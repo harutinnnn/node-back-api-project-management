@@ -2,6 +2,7 @@ import {AppContext} from "../types/app.context.type";
 import {boardColumns, projects, taskMembers, tasks} from "../db/schema";
 import {and, asc, eq, inArray, sql} from "drizzle-orm";
 import {BoardDataType, ColumnInnerTaskIds, ColumnInnerTaskIdsQuery, ColumnType} from "../types/board.data.type";
+import {Statuses} from "../enums/Statuses";
 
 export class BoardDataService {
 
@@ -26,7 +27,10 @@ export class BoardDataService {
 
             if (project) {
 
-                const columns: ColumnType[] = await this.context.db.select().from(boardColumns).where(eq(boardColumns.projectId, projectId));
+                const columns: ColumnType[] = await this.context.db.select().from(boardColumns).where(and(
+                    eq(boardColumns.projectId, projectId),
+                    eq(boardColumns.status, Statuses.ACTIVE)
+                ));
 
                 if (columns) {
 

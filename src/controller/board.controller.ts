@@ -12,6 +12,7 @@ import {BoardDataService} from "../services/BoardDataService";
 import {and, eq, max, sql} from "drizzle-orm";
 import {TaskType} from "../types/board.data.type";
 import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
+import {Statuses} from "../enums/Statuses";
 
 export class BoardController {
 
@@ -105,7 +106,7 @@ export class BoardController {
                     await this.context.db.insert(notifications).values({
                         userId: Number(validatedData.assignee),
                         types: NotificationTypesEnum.TASK,
-                        actionTypes:NotificationActionTypesEnum.CREATE,
+                        actionTypes: NotificationActionTypesEnum.CREATE,
                         message: `A new task has been assigned to you. (${validatedData.title})`,
                         objectId: result.id
                     });
@@ -137,39 +138,56 @@ export class BoardController {
 
             if (req.user?.companyId) {
 
-                const taskData: Omit<TaskType, "id" | "createdAt" | "status"> = {
-                    projectId: Number(validatedData.projectId),
-                    columnId: validatedData?.columnId,
-                    title: validatedData.title,
-                    description: validatedData.description,
-                    priority: validatedData.priority,
-                }
+                await this.context.db.transaction(async (trx: any) => {
 
-                const result = await this.context.db.update(tasks).set(taskData).where(
-                    and(
-                        eq(tasks.projectId, validatedData.projectId),
-                        eq(tasks.id, validatedData.id),
-                        eq(tasks.columnId, validatedData.columnId),
-                    )
-                );
+                    const taskData: Omit<TaskType, "id" | "createdAt" | "status"> = {
+                        projectId: Number(validatedData.projectId),
+                        columnId: validatedData?.columnId,
+                        title: validatedData.title,
+                        description: validatedData.description,
+                        priority: validatedData.priority,
+                    }
 
-                if (validatedData.assignee) {
+                    const result = await trx.update(tasks).set(taskData).where(
+                        and(
+                            eq(tasks.projectId, validatedData.projectId),
+                            eq(tasks.id, validatedData.id),
+                            eq(tasks.columnId, validatedData.columnId),
+                        )
+                    );
 
-                    await this.context.db.insert(taskMembers).values({
-                        taskId: validatedData.id,
-                        userId: Number(validatedData.assignee)
-                    });
+                    if (validatedData.assignee) {
 
-                    await this.context.db.insert(notifications).values({
-                        userId: Number(validatedData.assignee),
-                        types: NotificationTypesEnum.TASK,
-                        actionTypes:NotificationActionTypesEnum.UPDATE,
-                        message: `Task (${validatedData.title}) has been changed`,
-                        objectId: validatedData.id
-                    });
-                }
+                        await trx.delete(taskMembers).where(
+                            eq(taskMembers.taskId, validatedData.id)
+                        )
 
-                return res.json(taskData);
+                        await trx.insert(taskMembers).values({
+                            taskId: validatedData.id,
+                            userId: Number(validatedData.assignee)
+                        });
+
+
+                        await trx.delete(notifications).where(
+                            and(
+                                eq(notifications.userId, Number(validatedData.assignee)),
+                                eq(notifications.objectId, validatedData.id),
+                                eq(notifications.types, NotificationTypesEnum.TASK),
+                                eq(notifications.actionTypes, NotificationActionTypesEnum.UPDATE),
+                            )
+                        )
+
+                        await trx.insert(notifications).values({
+                            userId: Number(validatedData.assignee),
+                            types: NotificationTypesEnum.TASK,
+                            actionTypes: NotificationActionTypesEnum.UPDATE,
+                            message: `Task (${validatedData.title}) has been changed`,
+                            objectId: validatedData.id
+                        });
+                    }
+
+                    return res.json(taskData);
+                });
 
             } else {
                 return res.status(500).json({error: "Failed to create profession"});
@@ -189,7 +207,8 @@ export class BoardController {
 
         try {
 
-            await this.context.db.delete(boardColumns).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
+            // await this.context.db.delete(boardColumns).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
+            await this.context.db.update(boardColumns).set({status:Statuses.ARCHIVED}).where(and(eq(boardColumns.projectId, validatedData.projectId), eq(boardColumns.id, validatedData.columnId)))
 
             res.status(200).json({
                 projectId: validatedData.projectId,
