@@ -13,6 +13,7 @@ import {and, asc, eq, sql} from "drizzle-orm";
 import {TaskType} from "../types/board.data.type";
 import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 import {Statuses} from "../enums/Statuses";
+import {Priorities} from "../enums/Priorities";
 
 export class BoardController {
 
@@ -127,8 +128,8 @@ export class BoardController {
                     projectId: validatedData.projectId,
                     columnId: validatedData?.columnId,
                     title: validatedData.title,
-                    description: validatedData.description,
-                    priority: validatedData.priority,
+                    description: validatedData?.description || "",
+                    priority: validatedData?.priority || Priorities.MEDIUM,
                     dueDate: validatedData?.dueDate,
                 }).$returningId();
 

@@ -19,8 +19,8 @@ export const TaskSchema = z.object({
     title: z.string(),
     projectId: z.int().optional(),
     columnId: z.int(),
-    description: z.string(),
-    priority: z.enum(Priorities),
+    description: z.string().optional(),
+    priority: z.enum(Priorities).optional(),
     assignee: z.int().optional(),
     dueDate: z.date().optional()
 });
