@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import {AppContext} from "../types/app.context.type";
-import {boardColumns, notifications, taskMembers, tasks} from "../db/schema";
+import {boardColumns, notifications, projects, taskMembers, tasks, users} from "../db/schema";
 import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
@@ -9,7 +9,7 @@ import {
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
 import {BoardDataService} from "../services/BoardDataService";
-import {and, eq, max, sql} from "drizzle-orm";
+import {and, asc, eq, sql} from "drizzle-orm";
 import {TaskType} from "../types/board.data.type";
 import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 import {Statuses} from "../enums/Statuses";
@@ -23,6 +23,42 @@ export class BoardController {
         this.boardDataService = new BoardDataService(this.context);
     }
 
+    tasks = async (req: Request, res: Response) => {
+
+        try {
+
+
+            const boardData = await this.context.db.select(
+                {
+                    ...tasks,
+                    columnTitle: boardColumns.title,
+                    projectTitle: projects.title,
+                    members: sql<string>`GROUP_CONCAT
+                    (
+                    ${users.name}
+                    SEPARATOR
+                    ','
+                    )`
+                }
+            ).from(tasks)
+                .innerJoin(boardColumns, eq(tasks.columnId, boardColumns.id))
+                .innerJoin(projects, eq(boardColumns.projectId, projects.id))
+                .leftJoin(taskMembers, eq(tasks.id, taskMembers.taskId))
+                .leftJoin(users,eq(taskMembers.userId,users.id))
+                .where(and(
+                    eq(boardColumns.status, Statuses.ACTIVE),
+                    eq(projects.companyId, Number(req.user?.companyId))
+                ))
+                .groupBy(tasks.id)
+                .orderBy(asc(tasks.createdAt))
+
+            res.send(boardData);
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({error: "Failed to fetch board data"});
+        }
+    }
     getBoardData = async (req: Request, res: Response) => {
 
         const validatedData = BoardSchema.parse(req.body);
@@ -173,7 +209,6 @@ export class BoardController {
                         })
 
                         await Promise.all(addMembers)
-
 
 
                         await trx.delete(notifications).where(

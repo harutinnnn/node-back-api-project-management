@@ -22,6 +22,13 @@ export const boardRouter = (context: AppContext) => {
     const boardController = new BoardController(context);
 
 
+    router.get(
+        "/tasks",
+        authenticateJWT,
+        boardController.tasks
+    );
+
+
     router.post(
         "/project",
         authenticateJWT,
