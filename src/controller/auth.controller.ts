@@ -1,22 +1,22 @@
 import {Request, Response} from "express";
-import {company, memberSkills, professions, skills, users} from "../db/schema";
-import {and, eq} from "drizzle-orm";
+import {company, memberSkills, users} from "../db/schema";
+import {eq} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {ZodError} from "zod";
 import {UserSchema} from "../schemas/user.schema";
 import {AppContext} from "../types/app.context.type";
 import {UserRoles} from "../enums/UserRoles";
-import {MemberSchema} from "../schemas/members.schema";
 import {UpdateUserSchema} from "../schemas/update.user.schema";
-import * as wasi from "node:wasi";
 import {MemberSkillsType} from "../types/skill.type";
 import {Statuses} from "../enums/Statuses";
 import {randomUUID} from "node:crypto";
 import {mailService} from "../modules/mail/mail.service";
 import {newMemberTemplate} from "../modules/mail/templates/newMember.template";
 import {TokenParamSchema} from "../schemas/IdParamSchema";
-import {use} from "passport";
+import {forgotSchema} from "../schemas/login.schema";
+import {forgotPassword} from "../modules/mail/templates/forgotPassword.template";
+import {generatePassword} from "../helpers/password.helper";
 
 export class AuthController {
 
@@ -245,6 +245,40 @@ export class AuthController {
             await this.context.db.update(users).set({refreshToken}).where(eq(users.id, user.id));
 
             res.json({token, refreshToken, user: {id: user.id, name: user.name, email: user.email}});
+        } catch (error) {
+            res.status(500).json({error: "Login failed"});
+        }
+    }
+
+    forgot = async (req: Request, res: Response) => {
+
+        const validatedData = forgotSchema.parse(req.body);
+
+        const {email} = req.body;
+
+        try {
+            const [user] = await this.context.db.select().from(users).where(eq(users.email, email));
+            console.log(user)
+            if (!user) {
+                return res.status(201).json({error: "Wrong email"});
+            }
+
+
+            const newPass = generatePassword(10)
+            const hashedPassword = await bcrypt.hash(newPass, 10);
+
+            await this.context.db.update(users).set({password: hashedPassword}).where(eq(users.id, user.id));
+
+            //Send email activation
+            await mailService.sendMail({
+                to: validatedData.email,
+                subject: "Forgot password",
+                html: forgotPassword(user.name, newPass),
+            });
+
+
+            res.json({message: "Password successfully forgotten please check you email"});
+
         } catch (error) {
             res.status(500).json({error: "Login failed"});
         }

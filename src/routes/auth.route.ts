@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import {AuthController} from '../controller/auth.controller'
-import {loginSchema} from "../schemas/login.schema";
+import {forgotSchema, loginSchema} from "../schemas/login.schema";
 import {UserSchema} from "../schemas/user.schema";
 import {validate, validateParams} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
@@ -19,6 +19,12 @@ export const authRouter = (context: AppContext) => {
         "/login",
         validate(loginSchema),
         authController.login
+    );
+
+    router.post(
+        "/forgot",
+        validate(forgotSchema),
+        authController.forgot
     );
 
     router.get(
