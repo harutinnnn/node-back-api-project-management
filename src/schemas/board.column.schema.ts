@@ -41,6 +41,10 @@ export const SortColumnsPayload = z.object({
     columns: z.array(z.number()).optional(),
 });
 
+export const TaskFileUpload = z.object({
+    taskId: z.coerce.number()
+});
+
 
 export const SortTasksPayload = z.object({
     draggedTaskId: z.int().optional(),

@@ -2,16 +2,25 @@ import {Router} from 'express';
 import {validate, validateParams} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
 import {authenticateJWT} from "../middlewares/auth";
-import {IdParamSchema} from "../schemas/IdParamSchema";
-import {ProfessionSchema} from "../schemas/profession.schema";
 import {BoardController} from "../controller/board.controller";
 import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
     DeleteBoardTaskPayload,
-    SortColumnsPayload, SortTasksPayload,
+    SortColumnsPayload, SortTasksPayload, TaskFileUpload,
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
+import multer from "multer";
+import {storage} from "../config/storage";
+import {IdParamSchema} from "../schemas/IdParamSchema";
+
+
+const avatarUpload = multer({
+    storage,
+    limits: {
+        fileSize: 2 * 1024 * 1024, // 5MB
+    },
+});
 
 
 export const boardRouter = (context: AppContext) => {
@@ -55,6 +64,21 @@ export const boardRouter = (context: AppContext) => {
         authenticateJWT,
         validate(TaskUpdateSchema),
         boardController.updateTask
+    );
+
+    router.post(
+        "/task-file",
+        authenticateJWT,
+        avatarUpload.single('file'),
+        validate(TaskFileUpload),
+        boardController.file
+    );
+
+    router.get(
+        "/task-files/:id",
+        authenticateJWT,
+        validateParams(IdParamSchema),
+        boardController.getFile
     );
 
     router.post(

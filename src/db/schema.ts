@@ -119,6 +119,7 @@ export const taskFiles = mysqlTable("taskFiles", {
     id: int('id').autoincrement().primaryKey(),
     taskId: int().notNull(),
     file: varchar("file", {length: 255}).notNull(),
+    fileType: varchar("fileType", {length: 255}),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     taskFk: foreignKey({

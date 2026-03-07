@@ -1,11 +1,11 @@
 import {Request, Response} from "express";
 import {AppContext} from "../types/app.context.type";
-import {boardColumns, notifications, projects, taskMembers, tasks, users} from "../db/schema";
+import {boardColumns, notifications, projects, taskFiles, taskMembers, tasks, users} from "../db/schema";
 import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
     DeleteBoardTaskPayload,
-    SortColumnsPayload, SortTasksPayload,
+    SortColumnsPayload, SortTasksPayload, TaskFileUpload,
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
 import {BoardDataService} from "../services/BoardDataService";
@@ -14,6 +14,9 @@ import {TaskType} from "../types/board.data.type";
 import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 import {Statuses} from "../enums/Statuses";
 import {Priorities} from "../enums/Priorities";
+import path from "node:path";
+import fs from "node:fs";
+import {IdParamSchema} from "../schemas/IdParamSchema";
 
 export class BoardController {
 
@@ -35,7 +38,7 @@ export class BoardController {
 
                 res.send(boardData);
 
-            }else{
+            } else {
                 res.status(500).json({error: "Failed to fetch board data"});
             }
 
@@ -314,6 +317,77 @@ export class BoardController {
             console.error(err);
 
             res.status(500).json({error: "Failed to fetch professions"});
+        }
+    }
+
+    file = async (req: Request, res: Response) => {
+
+        const validatedData = TaskFileUpload.parse(req.body);
+
+        const fileFolderPath = path.join(__dirname, '../../uploads/tasks');
+
+        try {
+
+            if (!fs.existsSync(fileFolderPath)) {
+                fs.mkdirSync(fileFolderPath)
+            }
+
+            const name = req.file?.filename;
+            const mimetype = req.file?.mimetype;
+            const filePath = req.file?.path as string;
+
+            const [member] = await this.context.db.select().from(users).where(eq(users.id, Number(req.user?.id)));
+
+            if (member) {
+
+                const newPath = path.join(__dirname, `../../uploads/tasks/${name}`);
+                fs.rename(filePath, newPath, async (err) => {
+                    if (!err) {
+
+                        const fileUrl = `/uploads/tasks/${name}`
+                        const [file] = await this.context.db.insert(taskFiles).values(
+                            {
+                                file: fileUrl,
+                                taskId: validatedData.taskId,
+                                fileType: mimetype,
+
+                            }
+                        ).$returningId();
+
+
+                        console.log('file', file)
+
+                        res.json({
+                            id: file.id,
+                            file: fileUrl,
+                            fileType: mimetype,
+                            taskId: validatedData.taskId,
+
+                        })
+                    } else {
+                        res.status(201).json({error: "Some thing went wrong"})
+                    }
+                })
+            } else {
+                res.status(201).json({error: "Some thing went wrong"})
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    getFile = async (req: Request, res: Response) => {
+
+        const {id} = IdParamSchema.parse(req.params);
+
+        try {
+
+            const taskFileList = await this.context.db.select().from(taskFiles).where(eq(taskFiles.taskId, Number(id)));
+
+            res.json(taskFileList)
+
+        } catch (err) {
+            console.log(err)
         }
     }
 
