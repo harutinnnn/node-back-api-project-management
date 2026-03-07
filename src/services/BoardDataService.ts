@@ -1,5 +1,5 @@
 import {AppContext} from "../types/app.context.type";
-import {boardColumns, projects, taskMembers, tasks} from "../db/schema";
+import {boardColumns, projects, taskMembers, tasks, users} from "../db/schema";
 import {and, asc, eq, inArray, sql} from "drizzle-orm";
 import {BoardDataType, ColumnInnerTaskIds, ColumnInnerTaskIdsQuery, ColumnType} from "../types/board.data.type";
 import {Statuses} from "../enums/Statuses";
@@ -104,7 +104,10 @@ export class BoardDataService {
         }
     }
 
-
+    /**
+     * @param projectId
+     * @param columns
+     */
     sortBoardColumns = async (projectId: number, columns: number[]): Promise<ColumnInnerTaskIds[]> => {
 
         try {
@@ -132,7 +135,7 @@ export class BoardDataService {
                 .leftJoin(tasks, eq(boardColumns.id, tasks.columnId))
                 .orderBy(asc(boardColumns.pos))
                 .groupBy(boardColumns.id)
-                .where(and(eq(boardColumns.projectId, projectId),eq(boardColumns.status, Statuses.ACTIVE)));
+                .where(and(eq(boardColumns.projectId, projectId), eq(boardColumns.status, Statuses.ACTIVE)));
 
 
             const parsedColumns: ColumnInnerTaskIds[] = [];
@@ -164,6 +167,10 @@ export class BoardDataService {
 
     }
 
+    /**
+     * @param columns
+     * @param draggedTaskId
+     */
     sortBoardColumnTasks = async (
         columns: {
             columnId: number,
@@ -207,5 +214,46 @@ export class BoardDataService {
 
     }
 
+    async getTasks(companyId: number) {
+
+
+        try {
+
+            return await this.context.db.select(
+                {
+                    ...tasks,
+                    columnTitle: boardColumns.title,
+                    projectTitle: projects.title,
+                    members: sql<string>`GROUP_CONCAT
+                    (
+                    ${users.name}
+                    SEPARATOR
+                    ','
+                    )`
+                }
+            ).from(tasks)
+                .innerJoin(boardColumns, eq(tasks.columnId, boardColumns.id))
+                .innerJoin(projects, eq(boardColumns.projectId, projects.id))
+                .leftJoin(taskMembers, eq(tasks.id, taskMembers.taskId))
+                .leftJoin(users, eq(taskMembers.userId, users.id))
+                .where(and(
+                    eq(boardColumns.status, Statuses.ACTIVE),
+                    eq(projects.companyId, Number(companyId))
+                ))
+                .groupBy(tasks.id)
+                .orderBy(asc(tasks.createdAt))
+
+        } catch (err) {
+
+            if (err instanceof Error) {
+                throw new Error(err.message)
+            } else {
+                throw new Error("Unknown error")
+            }
+
+        }
+
+
+    }
 
 }

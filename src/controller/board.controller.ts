@@ -28,32 +28,16 @@ export class BoardController {
 
         try {
 
+            if (req.user?.companyId) {
 
-            const boardData = await this.context.db.select(
-                {
-                    ...tasks,
-                    columnTitle: boardColumns.title,
-                    projectTitle: projects.title,
-                    members: sql<string>`GROUP_CONCAT
-                    (
-                    ${users.name}
-                    SEPARATOR
-                    ','
-                    )`
-                }
-            ).from(tasks)
-                .innerJoin(boardColumns, eq(tasks.columnId, boardColumns.id))
-                .innerJoin(projects, eq(boardColumns.projectId, projects.id))
-                .leftJoin(taskMembers, eq(tasks.id, taskMembers.taskId))
-                .leftJoin(users, eq(taskMembers.userId, users.id))
-                .where(and(
-                    eq(boardColumns.status, Statuses.ACTIVE),
-                    eq(projects.companyId, Number(req.user?.companyId))
-                ))
-                .groupBy(tasks.id)
-                .orderBy(asc(tasks.createdAt))
 
-            res.send(boardData);
+                const boardData = await this.boardDataService.getTasks(req.user?.companyId)
+
+                res.send(boardData);
+
+            }else{
+                res.status(500).json({error: "Failed to fetch board data"});
+            }
 
         } catch (err) {
             console.error(err);
@@ -159,7 +143,7 @@ export class BoardController {
                     description: validatedData?.description || "",
                     priority: validatedData?.priority || Priorities.MEDIUM,
                     dueDate: validatedData?.dueDate || null,
-                    assignee:[]
+                    assignee: []
                 }
 
 
