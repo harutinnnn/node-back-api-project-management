@@ -150,7 +150,6 @@ export class MembersController {
             }
 
         } catch (error) {
-            console.log(error)
             if (error instanceof Error) {
                 console.error('Error: ' + error.message);
             }

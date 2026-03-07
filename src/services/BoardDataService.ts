@@ -73,7 +73,7 @@ export class BoardDataService {
 
 
                         tasksData.map(task => {
-                            console.log(task.assignee)
+
                             if (typeof task.assignee === "string") {
                                 task.assignee = task.assignee.split(',').map((assignee: any) => Number(assignee));
                             } else {

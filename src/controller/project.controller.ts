@@ -135,11 +135,9 @@ export class ProjectController {
                 return res.status(500).json({error: "Failed to create project"});
             }
         } catch (error) {
-            console.log(error)
             if (error instanceof Error) {
                 console.error('Error: ' + error.message);
             }
-            console.log(req)
             res.status(500).json({error: "Failed to create member"});
         }
     }

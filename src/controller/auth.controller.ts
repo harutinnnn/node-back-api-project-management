@@ -156,13 +156,11 @@ export class AuthController {
 
                 //TODO check wrong-activation-code path not redirect or cache
             } else {
-                console.log('wrong 1')
                 return res.redirect((process.env.APP_SITE_URL as string) + '/wrong-activation-code');
             }
 
 
         } catch (err) {
-            console.log('wrong 2')
             return res.redirect((process.env.APP_SITE_URL as string) + '/wrong-activation-code');
         }
 
@@ -258,7 +256,7 @@ export class AuthController {
 
         try {
             const [user] = await this.context.db.select().from(users).where(eq(users.email, email));
-            console.log(user)
+
             if (!user) {
                 return res.status(201).json({error: "Wrong email"});
             }
