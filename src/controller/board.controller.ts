@@ -4,7 +4,7 @@ import {boardColumns, notifications, projects, taskFiles, taskMembers, tasks, us
 import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
-    DeleteBoardTaskPayload,
+    DeleteBoardTaskPayload, RemoveTaskFileUpload,
     SortColumnsPayload, SortTasksPayload, TaskFileUpload,
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
@@ -355,8 +355,6 @@ export class BoardController {
                         ).$returningId();
 
 
-                        console.log('file', file)
-
                         res.json({
                             id: file.id,
                             file: fileUrl,
@@ -371,6 +369,46 @@ export class BoardController {
             } else {
                 res.status(201).json({error: "Some thing went wrong"})
             }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    removeTaskFile = async (req: Request, res: Response) => {
+
+        const validatedData = RemoveTaskFileUpload.parse(req.body);
+
+
+        try {
+
+
+            const [file] = await this.context.db.select().from(taskFiles).where(
+                and(
+                    eq(taskFiles.taskId, validatedData.taskId),
+                    eq(taskFiles.id, validatedData.fileId)
+                )
+            );
+
+            if (file) {
+
+                const rootDir = process.cwd();
+                const filePath = path.join(rootDir, file.file)
+
+                //TODO check if user can remove the file
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath)
+                }
+
+                await this.context.db.delete(taskFiles).where(
+                    and(
+                        eq(taskFiles.taskId, validatedData.taskId),
+                        eq(taskFiles.id, validatedData.fileId)
+                    )
+                );
+            }
+
+            res.status(200).json(file)
+
         } catch (err) {
             console.log(err)
         }

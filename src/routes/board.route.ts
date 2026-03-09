@@ -6,7 +6,7 @@ import {BoardController} from "../controller/board.controller";
 import {
     BoardColumnSchema,
     BoardSchema, DeleteBoardColPayload,
-    DeleteBoardTaskPayload,
+    DeleteBoardTaskPayload, RemoveTaskFileUpload,
     SortColumnsPayload, SortTasksPayload, TaskFileUpload,
     TaskSchema, TaskUpdateSchema
 } from "../schemas/board.column.schema";
@@ -72,6 +72,14 @@ export const boardRouter = (context: AppContext) => {
         avatarUpload.single('file'),
         validate(TaskFileUpload),
         boardController.file
+    );
+
+    router.post(
+        "/remove-task-file",
+        authenticateJWT,
+        avatarUpload.single('file'),
+        validate(RemoveTaskFileUpload),
+        boardController.removeTaskFile
     );
 
     router.get(

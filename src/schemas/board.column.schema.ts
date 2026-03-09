@@ -45,6 +45,11 @@ export const TaskFileUpload = z.object({
     taskId: z.coerce.number()
 });
 
+export const RemoveTaskFileUpload = z.object({
+    taskId: z.coerce.number(),
+    fileId: z.coerce.number()
+});
+
 
 export const SortTasksPayload = z.object({
     draggedTaskId: z.int().optional(),
