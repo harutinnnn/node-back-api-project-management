@@ -371,6 +371,7 @@ export class BoardController {
             }
         } catch (err) {
             console.log(err)
+            res.status(500).json({error: "Failed to fetch professions"});
         }
     }
 
@@ -382,35 +383,53 @@ export class BoardController {
         try {
 
 
-            const [file] = await this.context.db.select().from(taskFiles).where(
-                and(
-                    eq(taskFiles.taskId, validatedData.taskId),
-                    eq(taskFiles.id, validatedData.fileId)
-                )
-            );
+            if (req.user?.companyId) {
 
-            if (file) {
 
-                const rootDir = process.cwd();
-                const filePath = path.join(rootDir, file.file)
+                const [file] = await this.context.db.select({...taskFiles})
+                    .from(taskFiles)
+                    .innerJoin(tasks, eq(tasks.id, taskFiles.taskId))
+                    .innerJoin(projects, eq(projects.id, tasks.projectId))
+                    .where(
+                        and(
+                            eq(projects.companyId, req.user?.companyId),
+                            eq(taskFiles.taskId, validatedData.taskId),
+                            eq(taskFiles.id, validatedData.fileId)
+                        )
+                    );
 
-                //TODO check if user can remove the file
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath)
+                if (file) {
+
+                    const rootDir = process.cwd();
+                    const filePath = path.join(rootDir, file.file)
+
+                    //TODO check if user can remove the file
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath)
+                    }
+
+                    await this.context.db.delete(taskFiles).where(
+                        and(
+                            eq(taskFiles.taskId, validatedData.taskId),
+                            eq(taskFiles.id, validatedData.fileId)
+                        )
+                    );
+
+                    res.status(200).json(file)
+
+                }else{
+                    res.status(500).json({error: "Failed to remove task file"});
                 }
 
-                await this.context.db.delete(taskFiles).where(
-                    and(
-                        eq(taskFiles.taskId, validatedData.taskId),
-                        eq(taskFiles.id, validatedData.fileId)
-                    )
-                );
-            }
 
-            res.status(200).json(file)
+
+            } else {
+                res.status(500).json({error: "Failed to remove task file"});
+            }
 
         } catch (err) {
             console.log(err)
+            res.status(500).json({error: "Failed to remove task file"});
         }
     }
 
@@ -426,6 +445,7 @@ export class BoardController {
 
         } catch (err) {
             console.log(err)
+            res.status(500).json({error: "Failed to fetch professions"});
         }
     }
 
