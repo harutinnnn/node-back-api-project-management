@@ -278,7 +278,7 @@ export class AuthController {
             res.json({message: "Password successfully forgotten please check you email"});
 
         } catch (error) {
-            res.status(500).json({error: "Login failed"});
+            res.status(500).json({error: "Forgot failed"});
         }
     }
 

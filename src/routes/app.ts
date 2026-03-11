@@ -12,6 +12,7 @@ import path from "node:path";
 import {projectRouter} from "./project.route";
 import {boardRouter} from "./board.route";
 import {notificationRouter} from "./notification.route";
+import {commentRouter} from "./comment.route";
 
 export const createApp = (context: AppContext) => {
 
@@ -31,6 +32,7 @@ export const createApp = (context: AppContext) => {
     app.use('/profession', professionRouter(context));
     app.use('/board', boardRouter(context));
     app.use('/notifications', notificationRouter(context));
+    app.use('/comment', commentRouter(context));
 
     return app;
 }

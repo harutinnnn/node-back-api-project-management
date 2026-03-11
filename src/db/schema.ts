@@ -129,6 +129,24 @@ export const taskFiles = mysqlTable("taskFiles", {
 }));
 
 
+export const taskComments = mysqlTable("taskComments", {
+    id: int('id').autoincrement().primaryKey(),
+    taskId: int().notNull(),
+    userId: int('userId').notNull().references(() => users.id),
+    content:text(),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+    taskFk: foreignKey({
+        columns: [table.taskId],
+        foreignColumns: [tasks.id],
+    }).onDelete("cascade"),
+    userFk: foreignKey({
+        columns: [table.userId],
+        foreignColumns: [users.id],
+    }).onDelete("cascade")
+}));
+
+
 export const taskMembers = mysqlTable("taskMembers", {
     id: int('id').autoincrement().primaryKey(),
     taskId: int('taskId').notNull().references(() => tasks.id),
