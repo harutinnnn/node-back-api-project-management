@@ -1,10 +1,9 @@
 import {NextFunction, Request, Response} from "express";
 import {projects, taskComments} from "../db/schema";
-import {eq} from "drizzle-orm";
+import {desc, eq} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
-import {Statuses} from "../enums/Statuses";
 
 export class CommentController {
 
@@ -24,7 +23,10 @@ export class CommentController {
 
             const validatedData = TaskCommentSchema.parse(req.body);
 
-            const comments = await this.context.db.select().from(taskComments).where(eq(taskComments.taskId, validatedData.taskId));
+            const comments = await this.context.db
+                .select()
+                .from(taskComments)
+                .where(eq(taskComments.taskId, validatedData.taskId)).orderBy(desc(taskComments.createdAt));
             res.json(comments);
         } catch (error) {
 
