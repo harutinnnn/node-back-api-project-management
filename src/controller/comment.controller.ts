@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import {projects, taskComments} from "../db/schema";
+import {projects, taskComments, users} from "../db/schema";
 import {desc, eq} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
@@ -24,8 +24,9 @@ export class CommentController {
             const validatedData = TaskCommentSchema.parse(req.body);
 
             const comments = await this.context.db
-                .select()
+                .select({...taskComments, name: users.name})
                 .from(taskComments)
+                .leftJoin(users, eq(taskComments.userId, users.id))
                 .where(eq(taskComments.taskId, validatedData.taskId)).orderBy(desc(taskComments.createdAt));
             res.json(comments);
         } catch (error) {
