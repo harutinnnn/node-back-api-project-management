@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {validate} from "../middlewares/validate";
+import {validate, validateParams} from "../middlewares/validate";
 import {AppContext} from "../types/app.context.type";
 import {authenticateJWT} from "../middlewares/auth";
 import {TaskController} from "../controller/task.controller";
@@ -41,9 +41,9 @@ export const commentRouter = (context: AppContext) => {
     );
 
     router.delete(
-        "/delete",
+        "/:id",
         authenticateJWT,
-        validate(IdParamSchema),
+        validateParams(IdParamSchema),
         commentController.delete
     );
 

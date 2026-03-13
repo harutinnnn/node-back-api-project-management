@@ -77,13 +77,17 @@ export class CommentController {
      */
     delete = async (req: Request, res: Response) => {
 
-        const validatedData = IdParamSchema.parse(req.body);
+
+        const validatedData = IdParamSchema.parse(req.params);
+
 
         try {
 
-            await this.context.db.delete(projects).where(eq(projects.id, validatedData.id))
-            res.json({});
+            //TODO some thiing wrong not delete comment
+            await this.context.db.delete(taskComments).where(eq(taskComments.id, validatedData.id))
+            res.json({id: validatedData.id});
         } catch (error) {
+            console.error(error);
             if (error instanceof Error) {
                 console.error('Error: ' + error.message);
             }
