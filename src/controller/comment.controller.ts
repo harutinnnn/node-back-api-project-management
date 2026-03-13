@@ -83,7 +83,6 @@ export class CommentController {
 
         try {
 
-            //TODO some thiing wrong not delete comment
             await this.context.db.delete(taskComments).where(eq(taskComments.id, validatedData.id))
             res.json({id: validatedData.id});
         } catch (error) {
