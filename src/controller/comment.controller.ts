@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import {projects, taskComments, users} from "../db/schema";
+import {taskComments, users} from "../db/schema";
 import {and, desc, eq} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
