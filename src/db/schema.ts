@@ -134,6 +134,7 @@ export const taskComments = mysqlTable("taskComments", {
     taskId: int().notNull(),
     userId: int('userId').notNull().references(() => users.id),
     content:text(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     taskFk: foreignKey({
