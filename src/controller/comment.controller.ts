@@ -83,8 +83,6 @@ export class CommentController {
 
             if (req.user?.id) {
 
-                console.log('validatedData',validatedData)
-
                 const [comment] = await this.context.db.select().from(taskComments).where(and(
                     eq(taskComments.id, validatedData.id),
                     eq(taskComments.userId, req.user?.id)
@@ -92,14 +90,9 @@ export class CommentController {
 
                 if (comment) {
 
-                    console.log(comment);
-
-
                     const result = await this.context.db.update(taskComments).set({
                         content: validatedData.content,
                     }).where(eq(taskComments.id, validatedData.id));
-
-                    console.log(result);
 
                     //TODO set notification
 
