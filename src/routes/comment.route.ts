@@ -8,7 +8,7 @@ import multer from "multer";
 import {storage} from "../config/storage";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {CommentController} from "../controller/comment.controller";
-import {CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
+import {CommentEditSchema, CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
 
 
 const upload = multer({
@@ -36,8 +36,15 @@ export const commentRouter = (context: AppContext) => {
         "/create",
         authenticateJWT,
         validate(CommentSchema),
-        upload.array("attachments", 5),
+        // upload.array("attachments", 5),
         commentController.create
+    );
+
+    router.put(
+        "/edit",
+        authenticateJWT,
+        validate(CommentEditSchema),
+        commentController.edit
     );
 
     router.delete(

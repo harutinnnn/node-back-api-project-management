@@ -1,9 +1,9 @@
 import {NextFunction, Request, Response} from "express";
 import {projects, taskComments, users} from "../db/schema";
-import {desc, eq} from "drizzle-orm";
+import {and, desc, eq} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
-import {CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
+import {CommentEditSchema, CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
 
 export class CommentController {
 
@@ -62,6 +62,57 @@ export class CommentController {
 
             } else {
                 res.status(500).json({error: "Failed to create project"});
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error('Error: ' + error.message);
+            }
+            res.status(500).json({error: "Failed to create project"});
+        }
+    }
+
+    /**
+     * @param req
+     * @param res
+     */
+    edit = async (req: Request, res: Response) => {
+
+        try {
+
+            const validatedData = CommentEditSchema.parse(req.body);
+
+            if (req.user?.id) {
+
+                console.log('validatedData',validatedData)
+
+                const [comment] = await this.context.db.select().from(taskComments).where(and(
+                    eq(taskComments.id, validatedData.id),
+                    eq(taskComments.userId, req.user?.id)
+                ));
+
+                if (comment) {
+
+                    console.log(comment);
+
+
+                    const result = await this.context.db.update(taskComments).set({
+                        content: validatedData.content,
+                    }).where(eq(taskComments.id, validatedData.id));
+
+                    console.log(result);
+
+                    //TODO set notification
+
+                    res.json({id: result.id});
+
+                } else {
+
+                    res.status(500).json({error: "Failed to edit comment"});
+
+                }
+
+            } else {
+                res.status(500).json({error: "Failed to edit comment"});
             }
         } catch (error) {
             if (error instanceof Error) {
