@@ -218,6 +218,27 @@ export const professions = mysqlTable("professions", {
 }));
 
 
+
+export const messages = mysqlTable("messages", {
+    id: int('id').autoincrement().primaryKey(),
+    companyId: int('companyId').notNull(),
+    senderId: int('senderId').notNull(),
+    receiverId: int('receiverId').notNull(),
+    message: varchar('message', {length: 255}).notNull(),
+    isRead: tinyint('isRead').notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+    usersSenderFk: foreignKey({
+        columns: [table.senderId],
+        foreignColumns: [users.id],
+    }).onDelete("cascade"),
+    usersReceiverFk: foreignKey({
+        columns: [table.receiverId],
+        foreignColumns: [users.id],
+    }).onDelete("cascade"),
+}));
+
+
 export const notifications = mysqlTable("notifications", {
     id: int('id').autoincrement().primaryKey(),
     userId: int('userId').notNull(),

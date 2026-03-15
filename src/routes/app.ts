@@ -13,6 +13,7 @@ import {projectRouter} from "./project.route";
 import {boardRouter} from "./board.route";
 import {notificationRouter} from "./notification.route";
 import {commentRouter} from "./comment.route";
+import {messageRouter} from "./message.route";
 
 export const createApp = (context: AppContext) => {
 
@@ -33,6 +34,7 @@ export const createApp = (context: AppContext) => {
     app.use('/board', boardRouter(context));
     app.use('/notifications', notificationRouter(context));
     app.use('/comment', commentRouter(context));
+    app.use('/message', messageRouter(context));
 
     return app;
 }
