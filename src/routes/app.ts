@@ -14,6 +14,7 @@ import {boardRouter} from "./board.route";
 import {notificationRouter} from "./notification.route";
 import {commentRouter} from "./comment.route";
 import {messageRouter} from "./message.route";
+import * as http from "node:http";
 
 export const createApp = (context: AppContext) => {
 
@@ -23,6 +24,13 @@ export const createApp = (context: AppContext) => {
     app.use(express.json());
     app.use(passport.initialize());
     app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+    app.use(cors());
+    app.use(express.json());
+
+    app.use(passport.initialize());
+
+
 
     app.use('/auth', authRouter(context));
     app.use('/users', userRouter(context));
@@ -36,5 +44,6 @@ export const createApp = (context: AppContext) => {
     app.use('/comment', commentRouter(context));
     app.use('/message', messageRouter(context));
 
-    return app;
+    return http.createServer(app);
+
 }
