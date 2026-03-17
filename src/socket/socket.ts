@@ -1,10 +1,13 @@
 import {AppContext} from "../types/app.context.type";
 import {messages, users} from "../db/schema";
-import {and, asc, eq, or} from "drizzle-orm";
+import {asc, eq} from "drizzle-orm";
+import {Socket} from "socket.io";
 
-export const socketApp = (context: AppContext) => {
+export const socketApp = (context: AppContext, socket: Socket) => {
 
-    context.socket?.on('send_message', async data => {
+    socket.on('send_message', async data => {
+
+        console.log('send_message',data);
 
         const emitUser = context.socketUsers.find(u => u.userId === data.userId);
         if (emitUser) {
@@ -23,13 +26,24 @@ export const socketApp = (context: AppContext) => {
 
     })
 
-    context.socket?.on('typing', data => {
-        context.socket?.emit('typing', data)
+    socket.on('typing', data => {
+
+        console.log('typing',data);
+
+        const emitUser = context.socketUsers.find(u => u.userId === data?.userId);
+        if (emitUser) {
+            context.io?.to(emitUser.socketId).emit('typing', data);
+        }
     })
 
 
-    context.socket?.on('stop typing', data => {
-        context.socket?.emit('stop typing', data)
+    socket.on('stop typing', data => {
+
+        console.log('stop typing',data);
+        const emitUser = context.socketUsers.find(u => u.userId === data?.userId);
+        if (emitUser) {
+            context.io?.to(emitUser.socketId).emit('stop typing', data);
+        }
     })
 
 }

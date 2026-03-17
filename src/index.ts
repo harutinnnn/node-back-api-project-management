@@ -4,7 +4,7 @@ import {createApp} from "./routes/app";
 import {AppContext} from "./types/app.context.type";
 import {storage} from "./config/storage";
 
-import {Server, Socket} from "socket.io";
+import {Server} from "socket.io";
 import {socketApp} from "./socket/socket";
 import passport from "./config/passport";
 
@@ -55,22 +55,30 @@ io.on("connection", socket => {
     const user = socket.data.user as Express.User | undefined;
 
     if (user?.id) {
-        if (!context.socketUsers.find(sU => sU.userId === user?.id)) {
-
-
-            context.socketUsers.push(
-                {
-                    userId: user.id,
-                    socketId: socket.id
-
-                }
-            );
+        const existingSocketUser = context.socketUsers.find(sU => sU.userId === user.id);
+        if (existingSocketUser) {
+            existingSocketUser.socketId = socket.id;
+        } else {
+            context.socketUsers.push({
+                userId: user.id,
+                socketId: socket.id
+            });
         }
     }
 
     console.log('connected')
-    context.socket = socket
-    socketApp(context)
+    socketApp(context, socket);
+
+    socket.on("disconnect", () => {
+        if (!user?.id) {
+            return;
+        }
+
+        context.socketUsers = context.socketUsers.filter(
+            socketUser => !(socketUser.userId === user.id && socketUser.socketId === socket.id)
+        );
+    });
+
 })
 
 const port = process.env.PORT || 4000;

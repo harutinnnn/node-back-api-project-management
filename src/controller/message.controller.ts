@@ -27,7 +27,7 @@ export class MessageController {
             const messagesList = await this.context.db
                 .select({...messages, receiverName: users.name, receiverAvatar: users.avatar})
                 .from(messages)
-                .leftJoin(users, eq(messages.receiverId, users.id))
+                    .leftJoin(users, eq(messages.senderId, users.id))
                 .where(or(
                     eq(messages.receiverId, validatedData.memberId),
 
@@ -36,8 +36,8 @@ export class MessageController {
                         eq(messages.receiverId, Number(req.user?.id))
                     )
                 ))
-                .orderBy(asc(messages.createdAt));
-            res.json(messagesList);
+                .orderBy(desc(messages.createdAt)).limit(10);
+            res.json(messagesList.reverse());
         } catch (error) {
 
             console.error(error);
