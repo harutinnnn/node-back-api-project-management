@@ -5,6 +5,7 @@ import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {CommentEditSchema, CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
 import {MemberMessagesSchema, MessageEditSchema} from "../schemas/message.schema";
+import {alias} from "drizzle-orm/mysql-core";
 
 export class MessageController {
 
@@ -24,13 +25,23 @@ export class MessageController {
 
             const validatedData = MemberMessagesSchema.parse(req.body);
 
-            const messagesList = await this.context.db
-                .select({...messages, receiverName: users.name, receiverAvatar: users.avatar})
-                .from(messages)
-                    .leftJoin(users, eq(messages.senderId, users.id))
-                .where(or(
-                    eq(messages.receiverId, validatedData.memberId),
+            const sender = alias(users, "sender");
+            const receiver = alias(users, "receiver");
 
+            const messagesList = await this.context.db
+                .select({
+                    message: messages,
+                    sender: sender,
+                    receiver: receiver
+                })
+                .from(messages)
+                .leftJoin(sender, eq(messages.senderId, sender.id))
+                .leftJoin(receiver, eq(messages.receiverId, receiver.id))
+                .where(or(
+                    and(
+                        eq(messages.senderId, Number(req.user?.id)),
+                        eq(messages.receiverId, validatedData.memberId)
+                    ),
                     and(
                         eq(messages.senderId, validatedData.memberId),
                         eq(messages.receiverId, Number(req.user?.id))

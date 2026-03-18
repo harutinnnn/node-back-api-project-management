@@ -1,7 +1,8 @@
 import {AppContext} from "../types/app.context.type";
 import {messages, users} from "../db/schema";
-import {asc, eq} from "drizzle-orm";
+import {and, asc, eq, or} from "drizzle-orm";
 import {Socket} from "socket.io";
+import {alias} from "drizzle-orm/mysql-core";
 
 export const socketApp = (context: AppContext, socket: Socket) => {
 
@@ -12,12 +13,21 @@ export const socketApp = (context: AppContext, socket: Socket) => {
         const emitUser = context.socketUsers.find(u => u.userId === data.userId);
         if (emitUser) {
 
-            const [message] = await context.db
-                .select({...messages, receiverName: users.name, receiverAvatar: users.avatar})
+            const sender = alias(users, "sender");
+            const receiver = alias(users, "receiver");
+
+            const [message] =  await context.db
+                .select({
+                    message: messages,
+                    sender: sender,
+                    receiver: receiver
+                })
                 .from(messages)
-                .leftJoin(users, eq(messages.receiverId, users.id))
+                .leftJoin(sender, eq(messages.senderId, sender.id))
+                .leftJoin(receiver, eq(messages.receiverId, receiver.id))
                 .where(eq(messages.id, data.id))
-                .orderBy(asc(messages.createdAt));
+
+
 
             console.log('emitUser.socketId',emitUser.socketId);
             context.io?.to(emitUser.socketId).emit('send_message', message);
