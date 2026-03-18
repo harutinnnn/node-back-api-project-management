@@ -8,7 +8,6 @@ export const socketApp = (context: AppContext, socket: Socket) => {
 
     socket.on('send_message', async data => {
 
-        console.log('send_message',data);
 
         const emitUser = context.socketUsers.find(u => u.userId === data.userId);
         if (emitUser) {
@@ -28,9 +27,10 @@ export const socketApp = (context: AppContext, socket: Socket) => {
                 .where(eq(messages.id, data.id))
 
 
-
-            console.log('emitUser.socketId',emitUser.socketId);
             context.io?.to(emitUser.socketId).emit('send_message', message);
+            context.io?.to(emitUser.socketId).emit('send_notification', message);
+
+
 
         }
 

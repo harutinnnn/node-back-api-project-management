@@ -1,11 +1,12 @@
 import {NextFunction, Request, Response} from "express";
-import {messages, taskComments, users} from "../db/schema";
+import {messages, notifications, taskComments, users} from "../db/schema";
 import {and, asc, desc, eq, or} from "drizzle-orm";
 import {AppContext} from "../types/app.context.type";
 import {IdParamSchema} from "../schemas/IdParamSchema";
 import {CommentEditSchema, CommentSchema, TaskCommentSchema} from "../schemas/comment.schema";
 import {MemberMessagesSchema, MessageEditSchema} from "../schemas/message.schema";
 import {alias} from "drizzle-orm/mysql-core";
+import {NotificationActionTypesEnum, NotificationTypesEnum} from "../enums/NotificationTypesEnum";
 
 export class MessageController {
 
@@ -78,6 +79,13 @@ export class MessageController {
 
 
                 //TODO set notification
+                await this.context.db.insert(notifications).values({
+                    userId: Number(validatedData.receiverId),
+                    types: NotificationTypesEnum.MESSAGE,
+                    actionTypes: NotificationActionTypesEnum.CREATE,
+                    message: `${req.user?.name} send message!`,
+                    objectId: result.id
+                });
 
                 res.json({id: result.id});
 
