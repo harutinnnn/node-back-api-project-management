@@ -247,6 +247,7 @@ export const notifications = mysqlTable("notifications", {
     message: varchar('message', {length: 255}).notNull(),
     objectId: int('objectId'),
     isRead: tinyint('isRead').notNull().default(0),
+    json: text('json'),
     createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
     uniqueNotification: unique("notifications_unique").on(

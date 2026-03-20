@@ -79,13 +79,27 @@ export class MessageController {
 
 
                 //TODO set notification
-                await this.context.db.insert(notifications).values({
-                    userId: Number(validatedData.receiverId),
-                    types: NotificationTypesEnum.MESSAGE,
-                    actionTypes: NotificationActionTypesEnum.CREATE,
-                    message: `${req.user?.name} send message!`,
-                    objectId: result.id
-                });
+                const [notification] = await this.context.db.select().from(notifications).where(
+                    and(
+                        eq(notifications.userId, Number(validatedData.receiverId)),
+                        eq(notifications.types, NotificationTypesEnum.MESSAGE),
+                        eq(notifications.isRead, 0),
+                    )
+                );
+
+                if (!notification) {
+
+                    await this.context.db.insert(notifications).values({
+                        userId: Number(validatedData.receiverId),
+                        types: NotificationTypesEnum.MESSAGE,
+                        actionTypes: NotificationActionTypesEnum.CREATE,
+                        message: `${req.user?.name} send message!`,
+                        objectId: result.id,
+                        json: JSON.stringify({
+                            senderId: validatedData.senderId,
+                        }),
+                    });
+                }
 
                 res.json({id: result.id});
 
