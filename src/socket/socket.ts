@@ -30,8 +30,6 @@ export const socketApp = (context: AppContext, socket: Socket) => {
             context.io?.to(emitUser.socketId).emit('send_message', message);
             context.io?.to(emitUser.socketId).emit('send_notification', message);
 
-
-
         }
 
     })

@@ -30,6 +30,12 @@ export const membersRouter = (context: AppContext) => {
     );
 
     router.get(
+        "/chat",
+        authenticateJWT,
+        membersController.chat
+    );
+
+    router.get(
         "/:id",
         authenticateJWT,
         validateParams(IdParamSchema),

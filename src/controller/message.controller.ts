@@ -49,10 +49,17 @@ export class MessageController {
                     )
                 ))
                 .orderBy(desc(messages.createdAt)).limit(10);
+
+           await  this.context.db.update(messages).set({isRead: 1}).where(
+                and(
+                    eq(messages.receiverId, Number(req.user?.id)),
+                    eq(messages.senderId, validatedData.memberId)
+                ),
+            )
+
             res.json(messagesList.reverse());
         } catch (error) {
 
-            console.error(error);
             res.status(500).json({error: "Failed to fetch users"});
         }
     }

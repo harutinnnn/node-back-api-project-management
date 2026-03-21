@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
-import {memberSkills, skills, users} from "../db/schema";
-import {and, eq, inArray} from "drizzle-orm";
+import {memberSkills, messages, skills, users} from "../db/schema";
+import {and, eq, inArray, or, sql} from "drizzle-orm";
 import bcrypt from "bcrypt";
 import {AppContext} from "../types/app.context.type";
 import {MemberSchema} from "../schemas/members.schema";
@@ -11,7 +11,7 @@ import {newMemberTemplate} from "../modules/mail/templates/newMember.template";
 import {generatePassword} from "../helpers/password.helper";
 import * as fs from "node:fs";
 import path from "node:path";
-import {UserType} from "../types/user.type";
+import {UserType, UserUnreadMessagesType} from "../types/user.type";
 import {SkillType} from "../types/skill.type";
 import {Statuses} from "../enums/Statuses";
 
@@ -52,13 +52,52 @@ export class MembersController {
                     })
                 }
 
-
                 res.json(membersJoinSkills);
             } else {
                 res.json([]);
             }
 
         } catch (error) {
+            res.status(500).json({error: "Failed to fetch users"});
+        }
+
+    }
+    /**
+     * @param req
+     * @param res
+     * @param next
+     */
+    chat = async (req: Request, res: Response, next: NextFunction) => {
+
+        try {
+            if (req.user?.companyId) {
+
+                const members: UserUnreadMessagesType[] = await this.context.db
+                    .select({
+                        ...users,
+                        unreadMessages: sql<number>`COUNT
+                        (
+                        ${messages.id}
+                        )`
+                    }).from(users)
+                    .leftJoin(messages,
+                        and(
+                            eq(messages.receiverId, Number(req.user?.id)),
+                            eq(messages.senderId, users.id),
+                            eq(messages.isRead, 0)
+                        )
+                    )
+                    .where(eq(users.companyId, req.user?.companyId))
+                    .groupBy(users.id);
+
+
+                res.json(members);
+            } else {
+                res.json([]);
+            }
+
+        } catch (error) {
+            console.log(error)
             res.status(500).json({error: "Failed to fetch users"});
         }
 
