@@ -36,8 +36,6 @@ export const socketApp = (context: AppContext, socket: Socket) => {
 
     socket.on('typing', data => {
 
-        console.log('typing',data);
-
         const emitUser = context.socketUsers.find(u => u.userId === data?.userId);
         if (emitUser) {
             context.io?.to(emitUser.socketId).emit('typing', data);
