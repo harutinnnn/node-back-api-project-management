@@ -70,6 +70,7 @@ export class MembersController {
     chat = async (req: Request, res: Response, next: NextFunction) => {
 
         try {
+
             if (req.user?.companyId) {
 
                 const members: UserUnreadMessagesType[] = await this.context.db
@@ -91,7 +92,8 @@ export class MembersController {
                     .groupBy(users.id);
 
 
-                res.json(members);
+                const userIds:number[] =this.context.socketUsers.map(user => user.userId);
+                res.json({members: members, onlineUsers: userIds});
             } else {
                 res.json([]);
             }
